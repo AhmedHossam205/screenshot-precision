@@ -1,0 +1,58 @@
+import { Minus, Plus } from "lucide-react";
+import { formatR } from "../engine/correlation";
+
+interface Props {
+  value: number;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+}
+
+export function RSlider({ value, onChange, disabled }: Props) {
+  return (
+    <div className="w-full">
+      <div className="mb-1 text-center">
+        <span className="text-xs text-muted-foreground">توقعك</span>
+        <div dir="ltr" className="font-latin text-4xl font-bold tabular-nums text-foreground">
+          r = {formatR(value)}
+        </div>
+      </div>
+      <div dir="ltr" className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label="قلّل التوقع"
+          onClick={() => onChange(value - 0.05)}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border bg-card text-foreground disabled:opacity-40"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <input
+          type="range"
+          min={-1}
+          max={1}
+          step={0.05}
+          value={value}
+          disabled={disabled}
+          aria-label="تقدير معامل الارتباط r من سالب واحد لموجب واحد"
+          aria-valuetext={`r = ${formatR(value)}`}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="btd-range"
+        />
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label="زوّد التوقع"
+          onClick={() => onChange(value + 0.05)}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border bg-card text-foreground disabled:opacity-40"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+      <div dir="ltr" className="mt-1 grid grid-cols-3 px-12 text-[11px] text-muted-foreground">
+        <span className="text-left"><span className="font-latin">−1.00</span> · علاقة عكسية</span>
+        <span className="text-center">قريب من الصفر</span>
+        <span className="text-right">علاقة طردية · <span className="font-latin">+1.00</span></span>
+      </div>
+    </div>
+  );
+}
