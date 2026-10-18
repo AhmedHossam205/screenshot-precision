@@ -4,7 +4,7 @@ import { formatR } from "../engine/correlation";
 import type { CaseResult } from "../engine/gameState";
 import { ScatterPlot } from "./ScatterPlot";
 
-export function EvidenceCard({ id, result, selected, onClick }: { id: CaseId; result?: CaseResult; selected?: boolean; onClick?: () => void }) {
+export function EvidenceCard({ id, result, selected, onClick }: { id: CaseId; result?: CaseResult | undefined; selected?: boolean; onClick?: () => void }) {
   const c = CASES.find((x) => x.id === id)!;
   const Tag = onClick ? "button" : "div";
   return (

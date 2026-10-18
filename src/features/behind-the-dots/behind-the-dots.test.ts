@@ -13,13 +13,13 @@ const memStore = () => {
 describe("pearson", () => {
   it("matches the bible's coefficients", () => {
     expect(pearson(TUTORIAL.xs, TUTORIAL.ys)!).toBeCloseTo(0.96, 2);
-    const [c1, c2, c3] = CASES.map((c) => pearson(c.xs, c.ys)!);
+    const [c1, c2, c3] = CASES.map((c) => pearson(c.xs, c.ys)!) as [number, number, number];
     expect(Math.abs(c1 - 0.82)).toBeLessThan(0.005);
     expect(Math.abs(c2 + 0.88)).toBeLessThan(0.005);
     expect(Math.abs(c3 - 0.05)).toBeLessThan(0.005);
   });
   it("is order-invariant", () => {
-    const c = CASES[0];
+    const c = CASES[0]!;
     expect(pearson([...c.xs].reverse(), [...c.ys].reverse())).toBeCloseTo(pearson(c.xs, c.ys)!, 12);
   });
   it("returns null for degenerate input, never NaN", () => {

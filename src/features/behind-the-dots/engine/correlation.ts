@@ -8,8 +8,8 @@ export function pearson(xs: readonly number[], ys: readonly number[]): number | 
   let sxx = 0;
   let syy = 0;
   for (let i = 0; i < n; i++) {
-    const dx = xs[i] - mx;
-    const dy = ys[i] - my;
+    const dx = xs[i]! - mx;
+    const dy = ys[i]! - my;
     sxy += dx * dy;
     sxx += dx * dx;
     syy += dy * dy;
@@ -28,8 +28,8 @@ export function bestFit(xs: readonly number[], ys: readonly number[]) {
   let sxy = 0;
   let sxx = 0;
   for (let i = 0; i < n; i++) {
-    sxy += (xs[i] - mx) * (ys[i] - my);
-    sxx += (xs[i] - mx) ** 2;
+    sxy += (xs[i]! - mx) * (ys[i]! - my);
+    sxx += (xs[i]! - mx) ** 2;
   }
   if (sxx === 0) return null;
   const slope = sxy / sxx;

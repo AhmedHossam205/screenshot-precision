@@ -39,7 +39,7 @@ export function ScatterPlot({ xs, ys, xLabel, yLabel, showFit, highlight, onDotC
 
   return (
     <svg
-      dir="ltr"
+      style={{ direction: "ltr" }}
       viewBox={`0 0 ${W} ${H}`}
       className="h-auto w-full select-none"
       role="img"
@@ -102,23 +102,23 @@ export function ScatterPlot({ xs, ys, xLabel, yLabel, showFit, highlight, onDotC
           <g key={i}>
             {hi && !compact && (
               <>
-                <line x1={sx(x)} x2={sx(x)} y1={sy(ys[i])} y2={H - m.b} className="stroke-primary" strokeDasharray="4 3" />
-                <line x1={m.l} x2={sx(x)} y1={sy(ys[i])} y2={sy(ys[i])} className="stroke-primary" strokeDasharray="4 3" />
-                <text x={sx(x) + 10} y={sy(ys[i]) - 10} className="fill-primary font-latin text-[12px] font-bold">
-                  ({x}, {ys[i]})
+                <line x1={sx(x)} x2={sx(x)} y1={sy(ys[i]!)} y2={H - m.b} className="stroke-primary" strokeDasharray="4 3" />
+                <line x1={m.l} x2={sx(x)} y1={sy(ys[i]!)} y2={sy(ys[i]!)} className="stroke-primary" strokeDasharray="4 3" />
+                <text x={sx(x) + 10} y={sy(ys[i]!) - 10} className="fill-primary font-latin text-[12px] font-bold">
+                  ({x}, {ys[i]!})
                 </text>
               </>
             )}
             <circle
               cx={sx(x)}
-              cy={sy(ys[i])}
+              cy={sy(ys[i]!)}
               r={compact ? 4 : hi ? 8 : 6.5}
               className={`animate-dot ${hi ? "fill-primary" : "fill-chart-dot"} ${onDotClick ? "cursor-pointer" : ""}`}
               style={{ animationDelay: `${i * 25}ms`, opacity: 0.88 }}
               onClick={onDotClick ? () => onDotClick(i) : undefined}
             />
             {onDotClick && (
-              <circle cx={sx(x)} cy={sy(ys[i])} r={16} fill="transparent" className="cursor-pointer" onClick={() => onDotClick(i)} />
+              <circle cx={sx(x)} cy={sy(ys[i]!)} r={16} fill="transparent" className="cursor-pointer" onClick={() => onDotClick(i)} />
             )}
           </g>
         );
