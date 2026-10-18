@@ -66,7 +66,8 @@ export type Action =
   | { type: "revise" }
   | { type: "pause" }
   | { type: "resume" }
-  | { type: "replay" };
+  | { type: "replay" }
+  | { type: "__hydrate"; s: GameState };
 
 export const BRIEFING_LENGTH = 3;
 
@@ -140,6 +141,8 @@ export function reducer(s: GameState, a: Action): GameState {
       return s.phase === "cover" || s.phase === "debrief" ? s : { ...s, paused: true };
     case "resume":
       return { ...s, paused: false };
+    case "__hydrate":
+      return a.s;
     case "replay":
       return { ...initialState };
     default:

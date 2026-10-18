@@ -47,7 +47,7 @@ export function BehindTheDotsGame() {
 
   useEffect(() => {
     const s = loadState(window.localStorage, USER_ID);
-    rawDispatch({ type: "__hydrate", s } as unknown as Action);
+    rawDispatch({ type: "__hydrate", s });
     setMeta(loadMeta(window.localStorage, USER_ID));
     setLoaded(true);
   }, []);
