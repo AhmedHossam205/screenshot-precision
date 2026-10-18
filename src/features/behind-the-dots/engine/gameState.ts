@@ -76,7 +76,7 @@ export function totalScore(s: GameState): number {
 }
 
 export function currentCase(s: GameState) {
-  return CASES[Math.min(s.caseIndex, CASES.length - 1)];
+  return CASES[Math.min(s.caseIndex, CASES.length - 1)]!;
 }
 
 export function reducer(s: GameState, a: Action): GameState {

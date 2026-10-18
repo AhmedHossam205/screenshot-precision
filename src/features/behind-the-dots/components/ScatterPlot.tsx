@@ -18,9 +18,9 @@ interface Props {
   ys: readonly number[];
   xLabel: string;
   yLabel: string;
-  showFit?: boolean;
-  highlight?: number | null;
-  onDotClick?: (i: number) => void;
+  showFit?: boolean | undefined;
+  highlight?: number | null | undefined;
+  onDotClick?: ((i: number) => void) | undefined;
   compact?: boolean;
 }
 

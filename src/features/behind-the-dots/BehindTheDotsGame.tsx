@@ -160,7 +160,7 @@ function Cover({ meta, onStart }: { meta: Meta; onStart: () => void; hasProgress
   return (
     <section className="py-8 text-center">
       <div className="mx-auto mb-6 w-full max-w-sm rounded-2xl border bg-card p-4 shadow-card">
-        <ScatterPlot compact xs={CASES[0].xs} ys={CASES[0].ys} xLabel="" yLabel="" />
+        <ScatterPlot compact xs={CASES[0]!.xs} ys={CASES[0]!.ys} xLabel="" yLabel="" />
       </div>
       <p className="mb-2 font-latin text-xs font-semibold uppercase tracking-[0.3em] text-primary">Behind the Dots</p>
       <h1 className="mb-3 text-5xl font-black">ورا النقط</h1>
@@ -274,7 +274,7 @@ function Tutorial({ state, meta, dispatch }: { state: GameState; meta: Meta; dis
   );
 }
 
-function ScatterGuessTutorial(props: { guess: number; onGuess: (v: number) => void; result?: { guess: number; actual: number; points: number }; onSubmit: () => void }) {
+function ScatterGuessTutorial(props: { guess: number; onGuess: (v: number) => void; result?: { guess: number; actual: number; points: number } | undefined; onSubmit: () => void }) {
   return <ScatterGuess c={TUTORIAL} {...props} />;
 }
 

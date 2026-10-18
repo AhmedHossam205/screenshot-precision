@@ -10,7 +10,7 @@ interface Props {
   c: StoryCase;
   guess: number;
   onGuess: (v: number) => void;
-  result?: CaseResult;
+  result?: CaseResult | undefined;
   hintsUsed?: number;
   onHint?: () => void;
   onSubmit: () => void;
