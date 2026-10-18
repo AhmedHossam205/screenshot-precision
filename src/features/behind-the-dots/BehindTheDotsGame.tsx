@@ -361,7 +361,7 @@ function Debrief({ state, meta, dispatch }: { state: GameState; meta: Meta; disp
       <StoryCard>{ENDING_LINE}</StoryCard>
       <div className="animate-pop rounded-2xl border bg-card p-6 text-center shadow-card">
         <div className="text-sm text-muted-foreground">دقة تقديراتك</div>
-        <div className="font-latin text-6xl font-black text-primary">
+        <div dir="ltr" className="font-latin text-6xl font-black text-primary">
           {score}<span className="text-2xl text-muted-foreground">/{MAX_SCORE}</span>
         </div>
         {meta.bestScore > 0 && <div className="mt-1 text-xs text-muted-foreground">أفضل نتيجة: <span className="font-latin">{meta.bestScore}/{MAX_SCORE}</span></div>}
