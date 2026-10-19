@@ -61,7 +61,7 @@ export function ScatterGuess({ c, guess, onGuess, result, hintsUsed = 0, onHint,
             {result.timedOut && (
               <div className="flex items-center gap-3 rounded-xl bg-primary-soft p-3 text-sm">
                 <Glitch size={40} chomp />
-                <span>جليتش لحق ياكل جزء من النقط! خسرت نقطة. المرة الجاية اتحرك أسرع 💨</span>
+                <span>جليتش لحق ياكل جزء من النقط! خسرت نقطة. المرة الجاية اتحرك أسرع!</span>
               </div>
             )}
             {!result.timedOut && c.id !== "T0" && (
