@@ -5,6 +5,7 @@ import { formatR, SCORE_LABELS, scoreGuess } from "../engine/correlation";
 import type { CaseResult } from "../engine/gameState";
 import { RSlider } from "./RSlider";
 import { ScatterPlot } from "./ScatterPlot";
+import { Dotty, Glitch } from "./Mascot";
 
 interface Props {
   c: StoryCase;
@@ -57,6 +58,17 @@ export function ScatterGuess({ c, guess, onGuess, result, hintsUsed = 0, onHint,
         result &&
         score && (
           <div className="mt-3 animate-rise space-y-3">
+            {result.timedOut && (
+              <div className="flex items-center gap-3 rounded-xl bg-primary-soft p-3 text-sm">
+                <Glitch size={40} chomp />
+                <span>جليتش لحق ياكل جزء من النقط! خسرت نقطة. المرة الجاية اتحرك أسرع!</span>
+              </div>
+            )}
+            {!result.timedOut && c.id !== "T0" && (
+              <div className="flex items-center justify-center gap-2 text-sm font-semibold">
+                <Dotty size={36} mood="cheer" /> نجّيتني من جليتش!
+              </div>
+            )}
             <h3 className="text-center text-sm font-semibold text-muted-foreground">البيانات بتقول إيه؟</h3>
             <div dir="ltr" className="grid grid-cols-3 gap-2 text-center">
               <Stat label="توقعك" value={formatR(result.guess)} />

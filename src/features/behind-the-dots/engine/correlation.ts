@@ -42,9 +42,9 @@ export type ScoreLabel = "excellent" | "close" | "good" | "review";
 
 export function scoreGuess(guess: number, actual: number): { points: 0 | 1 | 2 | 3; label: ScoreLabel; error: number } {
   const error = Math.abs(guess - actual);
-  if (error <= 0.1 + EPS) return { points: 3, label: "excellent", error };
-  if (error <= 0.2 + EPS) return { points: 2, label: "close", error };
-  if (error <= 0.35 + EPS) return { points: 1, label: "good", error };
+  if (error <= 0.15 + EPS) return { points: 3, label: "excellent", error };
+  if (error <= 0.3 + EPS) return { points: 2, label: "close", error };
+  if (error <= 0.5 + EPS) return { points: 1, label: "good", error };
   return { points: 0, label: "review", error };
 }
 
@@ -63,6 +63,6 @@ export function formatR(r: number | null): string {
 }
 
 export function clampGuess(v: number): number {
-  const stepped = Math.round(v * 20) / 20;
+  const stepped = Math.round(v * 100) / 100;
   return Math.max(-1, Math.min(1, Number(stepped.toFixed(2))));
 }

@@ -8,7 +8,8 @@ import { ScatterGuess } from "./components/ScatterGuess";
 import { ScatterPlot } from "./components/ScatterPlot";
 import { StoryCard } from "./components/StoryCard";
 import { pearson } from "./engine/correlation";
-import { currentCase, initialState, reducer, totalScore, type Action, type GameState } from "./engine/gameState";
+import { ChaseTimer, Dotty, Glitch } from "./components/Mascot";
+import { currentCase, ROUND_SECONDS, initialState, reducer, totalScore, type Action, type GameState } from "./engine/gameState";
 import { loadMeta, loadState, saveMeta, saveState, type Meta } from "./engine/persistence";
 import { playTone } from "./engine/sound";
 
@@ -159,13 +160,14 @@ function Scene({ state, meta, dispatch }: { state: GameState; meta: Meta; dispat
 function Cover({ meta, onStart }: { meta: Meta; onStart: () => void; hasProgress: boolean }) {
   return (
     <section className="py-8 text-center">
-      <div className="mx-auto mb-6 w-full max-w-sm rounded-2xl border bg-card p-4 shadow-card">
-        <ScatterPlot compact xs={CASES[0]!.xs} ys={CASES[0]!.ys} xLabel="" yLabel="" />
+      <div dir="ltr" className="mx-auto mb-6 flex w-full max-w-sm items-end justify-between rounded-2xl border bg-card p-6 shadow-card">
+        <Glitch size={80} />
+        <Dotty size={72} />
       </div>
       <p className="mb-2 font-latin text-xs font-semibold uppercase tracking-[0.3em] text-primary">Behind the Dots</p>
       <h1 className="mb-3 text-5xl font-black">ورا النقط</h1>
       <p className="mx-auto mb-8 max-w-md text-lg leading-relaxed text-muted-foreground">
-        شكاوى عملاء "رواد" زادت. اقرأ النقط، خمّن الارتباط، واعرف إمتى النمط يبقى دليل وإمتى لأ.
+        ساعد دوتّي تقرأ النقط وتخمّن العلاقة قبل ما وحش الفوضى «جليتش» ياكلها! 8 ثواني لكل رسمة.
       </p>
       <div className="flex flex-col items-center gap-3">
         <Btn onClick={onStart} className="w-full max-w-xs">ابدأ التحقيق</Btn>
@@ -287,6 +289,9 @@ function Puzzle({ state, dispatch }: { state: GameState; dispatch: (a: Action) =
         الدليل <span className="font-latin">{state.caseIndex + 1}</span> من <span className="font-latin">{CASES.length}</span> · {c.title}
       </div>
       <StoryCard>{c.question}</StoryCard>
+      {state.phase === "puzzle" && (
+        <ChaseTimer key={c.id} seconds={ROUND_SECONDS} paused={state.paused} onTimeout={() => dispatch({ type: "timeout" })} />
+      )}
       <ScatterGuess
         c={c}
         guess={state.guess}
