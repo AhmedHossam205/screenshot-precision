@@ -17,6 +17,7 @@ export interface CaseResult {
   guess: number;
   actual: number;
   points: number;
+  timedOut?: boolean;
 }
 
 export interface GameState {
@@ -60,6 +61,7 @@ export type Action =
   | { type: "skipTutorial"; tutorialEverDone: boolean }
   | { type: "hint" }
   | { type: "submit" }
+  | { type: "timeout" }
   | { type: "attach" }
   | { type: "choose"; choice: ChoiceId }
   | { type: "submitChoice" }
@@ -70,6 +72,10 @@ export type Action =
   | { type: "__hydrate"; s: GameState };
 
 export const BRIEFING_LENGTH = 3;
+/** Seconds before the Glitch monster catches Dotty. */
+export const ROUND_SECONDS = 8;
+/** Points lost when time runs out (never below 0). */
+export const TIMEOUT_PENALTY = 1;
 
 export function totalScore(s: GameState): number {
   return Object.values(s.results).reduce((a, r) => a + (r?.points ?? 0), 0);
@@ -115,6 +121,15 @@ export function reducer(s: GameState, a: Action): GameState {
       if (actual === null) return s;
       const { points } = scoreGuess(s.guess, actual);
       return { ...s, phase: "reveal", results: { ...s.results, [c.id]: { guess: s.guess, actual, points } } };
+    }
+    case "timeout": {
+      if (s.phase !== "puzzle" || s.paused) return s;
+      const c = currentCase(s);
+      if (s.results[c.id]) return { ...s, phase: "reveal" };
+      const actual = pearson(c.xs, c.ys);
+      if (actual === null) return s;
+      const points = Math.max(0, scoreGuess(s.guess, actual).points - TIMEOUT_PENALTY);
+      return { ...s, phase: "reveal", results: { ...s.results, [c.id]: { guess: s.guess, actual, points, timedOut: true } } };
     }
     case "attach": {
       if (s.phase !== "reveal") return s;

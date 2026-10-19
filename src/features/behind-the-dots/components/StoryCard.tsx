@@ -1,15 +1,9 @@
 import type { ReactNode } from "react";
 
-export function HalaAvatar({ size = 40 }: { size?: number }) {
-  return (
-    <div
-      aria-hidden
-      className="grid shrink-0 place-items-center rounded-full bg-primary font-bold text-primary-foreground"
-      style={{ width: size, height: size, fontSize: size * 0.42 }}
-    >
-      ه
-    </div>
-  );
+import { Dotty } from "./Mascot";
+
+export function HalaAvatar({ size = 44 }: { size?: number }) {
+  return <Dotty size={size} />;
 }
 
 export function StoryCard({ who = "hala", children, delay = 0 }: { who?: "hala" | "player"; children: ReactNode; delay?: number }) {
@@ -27,7 +21,7 @@ export function StoryCard({ who = "hala", children, delay = 0 }: { who?: "hala" 
     <div className="flex animate-rise items-start gap-3" style={{ animationDelay: `${delay}ms` }}>
       <HalaAvatar />
       <div className="max-w-[88%] rounded-2xl rounded-tr-sm border bg-card px-4 py-3 text-[15px] leading-relaxed shadow-card">
-        <div className="mb-0.5 text-[11px] font-semibold text-primary">هالة · مسؤولة تجربة العملاء</div>
+        <div className="mb-0.5 text-[11px] font-semibold text-primary">دوتّي · مساعدك في التحقيق</div>
         {children}
       </div>
     </div>

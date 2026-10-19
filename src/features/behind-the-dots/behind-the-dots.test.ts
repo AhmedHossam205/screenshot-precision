@@ -32,10 +32,10 @@ describe("pearson", () => {
 
 describe("scoring thresholds", () => {
   it("awards 3/2/1/0 at exact boundaries", () => {
-    expect(scoreGuess(0.6, 0.5).points).toBe(3);
-    expect(scoreGuess(0.7, 0.5).points).toBe(2);
-    expect(scoreGuess(0.85, 0.5).points).toBe(1);
-    expect(scoreGuess(0.86, 0.5).points).toBe(0);
+    expect(scoreGuess(0.65, 0.5).points).toBe(3);
+    expect(scoreGuess(0.8, 0.5).points).toBe(2);
+    expect(scoreGuess(1.0, 0.5).points).toBe(1);
+    expect(scoreGuess(-0.01, 0.5).points).toBe(0);
   });
 });
 
@@ -53,6 +53,18 @@ describe("game flow", () => {
     s = run(s, { type: "submit" }, { type: "attach" }, { type: "attach" });
     expect(s.evidence).toEqual(["C1"]);
     expect(totalScore(s)).toBe(3);
+  });
+  it("guess moves in 0.01 steps", () => {
+    expect(run(toPuzzle(), { type: "setGuess", value: 0.37 }).guess).toBe(0.37);
+    expect(run(toPuzzle(), { type: "setGuess", value: -0.63 }).guess).toBe(-0.63);
+  });
+  it("timeout reveals and costs 1 point, never below 0", () => {
+    const s = run(toPuzzle(), { type: "setGuess", value: 0.8 }, { type: "timeout" });
+    expect(s.phase).toBe("reveal");
+    expect(s.results.C1?.points).toBe(2);
+    expect(s.results.C1?.timedOut).toBe(true);
+    const z = run(toPuzzle(), { type: "setGuess", value: -1 }, { type: "timeout" });
+    expect(z.results.C1?.points).toBe(0);
   });
   it("hints do not change the guess or reveal r", () => {
     const s = run(toPuzzle(), { type: "hint" }, { type: "hint" }, { type: "hint" });

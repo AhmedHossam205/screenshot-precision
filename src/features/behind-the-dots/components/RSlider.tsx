@@ -21,7 +21,7 @@ export function RSlider({ value, onChange, disabled }: Props) {
           type="button"
           disabled={disabled}
           aria-label="قلّل التوقع"
-          onClick={() => onChange(value - 0.05)}
+          onClick={() => onChange(value - 0.01)}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-full border bg-card text-foreground disabled:opacity-40"
         >
           <Minus className="h-4 w-4" />
@@ -30,7 +30,7 @@ export function RSlider({ value, onChange, disabled }: Props) {
           type="range"
           min={-1}
           max={1}
-          step={0.05}
+          step={0.01}
           value={value}
           disabled={disabled}
           aria-label="تقدير معامل الارتباط r من سالب واحد لموجب واحد"
@@ -42,11 +42,28 @@ export function RSlider({ value, onChange, disabled }: Props) {
           type="button"
           disabled={disabled}
           aria-label="زوّد التوقع"
-          onClick={() => onChange(value + 0.05)}
+          onClick={() => onChange(value + 0.01)}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-full border bg-card text-foreground disabled:opacity-40"
         >
           <Plus className="h-4 w-4" />
         </button>
+      </div>
+      <div dir="ltr" className="mt-2 grid grid-cols-3 gap-2">
+        {[
+          { v: -0.8, t: "عكسية قوية ↘" },
+          { v: 0, t: "مفيش علاقة" },
+          { v: 0.8, t: "طردية قوية ↗" },
+        ].map((p) => (
+          <button
+            key={p.v}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(p.v)}
+            className="h-10 rounded-lg border bg-muted text-xs font-semibold hover:bg-accent"
+          >
+            {p.t}
+          </button>
+        ))}
       </div>
       <div dir="ltr" className="mt-1 grid grid-cols-3 px-12 text-[11px] text-muted-foreground">
         <span className="text-left"><span className="font-latin">−1.00</span> · علاقة عكسية</span>
