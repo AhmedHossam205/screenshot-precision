@@ -73,7 +73,7 @@ export type Action =
 
 export const BRIEFING_LENGTH = 3;
 /** Seconds before the Glitch monster catches Dotty. */
-export const ROUND_SECONDS = 8;
+export const ROUND_SECONDS = 15;
 /** Points lost when time runs out (never below 0). */
 export const TIMEOUT_PENALTY = 1;
 

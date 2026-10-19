@@ -29,23 +29,47 @@ export function Dotty({ size = 44, mood = "happy" }: { size?: number; mood?: Moo
 /** Glitch — the scrambled-dots monster that eats data when time runs out. */
 export function Glitch({ size = 56, chomp = false }: { size?: number; chomp?: boolean }) {
   return (
-    <div aria-hidden className={chomp ? "animate-chomp" : "animate-wobble"} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 64 64" width={size} height={size}>
-        <path d="M6 40 Q4 10 32 8 Q60 10 58 40 L54 54 L46 48 L38 56 L30 48 L22 56 L14 48 L8 54 Z" className="fill-foreground" />
-        <circle cx="12" cy="14" r="3" className="fill-foreground" />
-        <circle cx="54" cy="12" r="2.5" className="fill-foreground" />
-        <circle cx="22" cy="24" r="6" className="fill-background" />
-        <circle cx="42" cy="24" r="6" className="fill-background" />
-        <circle cx="23" cy="25" r="3" className="fill-primary" />
-        <circle cx="41" cy="25" r="3" className="fill-primary" />
-        <path d="M14 15 L28 20 M50 15 L36 20" className="stroke-background" strokeWidth="3" strokeLinecap="round" />
-        <path d="M16 36 L20 42 L24 36 L28 42 L32 36 L36 42 L40 36 L44 42 L48 36" className="fill-none stroke-background" strokeWidth="2.5" strokeLinejoin="round" />
+    <div aria-hidden className={chomp ? "animate-lunge" : "animate-scuttle"} style={{ width: size, height: size }}>
+      <svg viewBox="0 0 80 80" width={size} height={size} overflow="visible">
+        {/* orbiting eaten data dots */}
+        <g className="animate-orbit" style={{ transformOrigin: "40px 40px" }}>
+          <circle cx="6" cy="20" r="3" className="fill-primary" />
+          <circle cx="74" cy="30" r="2.5" className="fill-chart-dot" />
+          <circle cx="66" cy="72" r="2" className="fill-primary" />
+        </g>
+        {/* legs */}
+        <g className="fill-foreground">
+          <rect x="18" y="62" width="7" height="12" rx="3.5" className="animate-leg" style={{ transformOrigin: "21px 62px" }} />
+          <rect x="36" y="62" width="7" height="12" rx="3.5" className="animate-leg-alt" style={{ transformOrigin: "39px 62px" }} />
+          <rect x="54" y="62" width="7" height="12" rx="3.5" className="animate-leg" style={{ transformOrigin: "57px 62px" }} />
+        </g>
+        {/* horns */}
+        <path d="M20 22 L12 4 L30 16 Z M60 22 L68 4 L50 16 Z" className="fill-primary animate-wiggle" style={{ transformOrigin: "40px 20px" }} />
+        {/* spiky body */}
+        <path d="M8 44 Q6 14 40 12 Q74 14 72 44 Q74 58 66 66 L14 66 Q6 58 8 44 Z" className="fill-foreground" />
+        <path d="M14 30 L6 26 M66 30 L74 26 M12 48 L3 50 M68 48 L77 50" className="stroke-foreground" strokeWidth="4" strokeLinecap="round" />
+        {/* eyes */}
+        <circle cx="28" cy="30" r="9" className="fill-background" />
+        <circle cx="52" cy="30" r="9" className="fill-background" />
+        <g className="animate-look">
+          <circle cx="29" cy="31" r="4.5" className="fill-primary" />
+          <circle cx="53" cy="31" r="4.5" className="fill-primary" />
+          <circle cx="30.5" cy="29.5" r="1.5" className="fill-background" />
+          <circle cx="54.5" cy="29.5" r="1.5" className="fill-background" />
+        </g>
+        <path d="M17 18 L36 24 M63 18 L44 24" className="stroke-background" strokeWidth="3.5" strokeLinecap="round" />
+        {/* mouth */}
+        <path d="M18 44 Q40 40 62 44 L58 58 Q40 64 22 58 Z" className="fill-primary/80" />
+        <g className={chomp ? "animate-jaw-fast" : "animate-jaw"}>
+          <path d="M18 44 L24 52 L30 44 L36 52 L42 44 L48 52 L54 44 L60 52 L62 44 Z" className="fill-background" />
+        </g>
+        <path d="M22 58 L27 52 L32 58 L38 52 L44 58 L50 52 L56 58 Z" className="fill-background" />
       </svg>
     </div>
   );
 }
 
-/** The Glitch creeps toward Dotty over `seconds`; reaching her calls onTimeout once. */
+/** The Glitch silently creeps toward Dotty over `seconds` (no countdown shown); reaching her calls onTimeout once. */
 export function ChaseTimer({ seconds, paused, onTimeout }: { seconds: number; paused: boolean; onTimeout: () => void }) {
   const [elapsed, setElapsed] = useState(0);
   const fired = useRef(false);
@@ -63,7 +87,7 @@ export function ChaseTimer({ seconds, paused, onTimeout }: { seconds: number; pa
         const n = Math.min(seconds, e + dt);
         if (n >= seconds && !fired.current) {
           fired.current = true;
-          setTimeout(() => cb.current(), 450);
+          setTimeout(() => cb.current(), 500);
         }
         return n;
       });
@@ -74,26 +98,24 @@ export function ChaseTimer({ seconds, paused, onTimeout }: { seconds: number; pa
   }, [paused, seconds]);
 
   const p = elapsed / seconds;
-  const left = Math.max(0, Math.ceil(seconds - elapsed));
-  const danger = left <= 3;
+  const danger = p >= 0.75;
   const caught = elapsed >= seconds;
 
   return (
-    <div className={`rounded-2xl border bg-card p-3 shadow-card ${danger && !caught ? "animate-shiver" : ""}`} role="timer" aria-label={`فاضل ${left} ثواني`}>
-      <div className="mb-1 flex items-center justify-between text-xs font-semibold">
-        <span className={danger ? "text-primary" : "text-muted-foreground"}>
-          {caught ? "جليتش مسك دوتّي! 😱" : danger ? "بسرعة! جليتش قرّب!" : "ثبّت توقعك قبل ما جليتش يوصل لدوتّي"}
-        </span>
-        <span className={`font-latin text-lg font-black tabular-nums ${danger ? "text-primary" : ""}`}>{left}s</span>
-      </div>
-      <div dir="ltr" className="relative h-16">
-        <div className="absolute inset-x-0 bottom-2 h-2 rounded-full bg-muted" />
-        <div className="absolute bottom-2 left-0 h-2 rounded-full bg-primary/60" style={{ width: `${p * 100}%` }} />
-        <div className="absolute bottom-0" style={{ left: `calc(${p * 82}% )` }}>
-          <Glitch size={52} chomp={caught || danger} />
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 shadow-card backdrop-blur" aria-hidden>
+      <div className={`mx-auto max-w-2xl px-4 pt-1 ${danger && !caught ? "animate-shiver" : ""}`}>
+        <div className={`text-center text-xs font-semibold ${danger ? "text-primary" : "text-muted-foreground"}`}>
+          {caught ? "جليتش مسك دوتّي!" : danger ? "جليتش قرّب جداً! ثبّت توقعك!" : "جليتش جاي ورا دوتّي…"}
         </div>
-        <div className="absolute bottom-1 right-0">
-          <Dotty size={44} mood={caught || danger ? "scared" : "happy"} />
+        <div dir="ltr" className="relative h-20">
+          <div className="absolute inset-x-0 bottom-3 h-1.5 rounded-full bg-muted" />
+          <div className="absolute bottom-3 left-0 h-1.5 rounded-full bg-primary/50" style={{ width: `${p * 100}%` }} />
+          <div className="absolute bottom-1" style={{ left: `${p * 80}%`, transform: `scale(${1 + p * 0.35})`, transformOrigin: "bottom left" }}>
+            <Glitch size={56} chomp={caught || danger} />
+          </div>
+          <div className="absolute bottom-2 right-0">
+            <Dotty size={44} mood={caught || danger ? "scared" : "happy"} />
+          </div>
         </div>
       </div>
     </div>
