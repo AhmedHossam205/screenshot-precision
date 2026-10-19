@@ -167,7 +167,7 @@ function Cover({ meta, onStart }: { meta: Meta; onStart: () => void; hasProgress
       <p className="mb-2 font-latin text-xs font-semibold uppercase tracking-[0.3em] text-primary">Behind the Dots</p>
       <h1 className="mb-3 text-5xl font-black">ورا النقط</h1>
       <p className="mx-auto mb-8 max-w-md text-lg leading-relaxed text-muted-foreground">
-        ساعد دوتّي تقرأ النقط وتخمّن العلاقة قبل ما وحش الفوضى «جليتش» ياكلها! 8 ثواني لكل رسمة.
+        ساعد دوتّي تقرأ النقط وتخمّن العلاقة قبل ما وحش الفوضى «جليتش» ياكلها! اتحرك بسرعة!
       </p>
       <div className="flex flex-col items-center gap-3">
         <Btn onClick={onStart} className="w-full max-w-xs">ابدأ التحقيق</Btn>
@@ -292,6 +292,7 @@ function Puzzle({ state, dispatch }: { state: GameState; dispatch: (a: Action) =
       {state.phase === "puzzle" && (
         <ChaseTimer key={c.id} seconds={ROUND_SECONDS} paused={state.paused} onTimeout={() => dispatch({ type: "timeout" })} />
       )}
+      {state.phase === "puzzle" && <div className="h-24" />}
       <ScatterGuess
         c={c}
         guess={state.guess}
