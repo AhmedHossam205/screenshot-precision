@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, FolderClosed, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { CASES, MAX_SCORE, TUTORIAL } from "./data/cases";
 import { BRIEFING, CHOICES, ENDING_LINE, MEETING_LINE, SKILLS, TUTORIAL_LINES } from "./data/dialogue";
@@ -8,10 +8,12 @@ import { ScatterGuess } from "./components/ScatterGuess";
 import { ScatterPlot } from "./components/ScatterPlot";
 import { StoryCard } from "./components/StoryCard";
 import { pearson } from "./engine/correlation";
-import { ChaseTimer, Dotty, Glitch } from "./components/Mascot";
+import { ChaseTimer } from "./components/Mascot";
 import { currentCase, ROUND_SECONDS, initialState, reducer, totalScore, type Action, type GameState } from "./engine/gameState";
 import { loadMeta, loadState, saveMeta, saveState, type Meta } from "./engine/persistence";
 import { playTone } from "./engine/sound";
+import { createRunSeed } from "./engine/datasets";
+import { GuideIllustration } from "./components/GuideIllustration";
 
 const USER_ID = "guest";
 
@@ -94,7 +96,7 @@ export function BehindTheDotsGame() {
   return (
     <div dir="rtl" lang="ar" className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Brand />
-      <div className="mx-auto max-w-2xl px-4 pb-16 pt-4">
+      <div className={`mx-auto max-w-2xl px-4 pt-4 ${state.phase === "puzzle" ? "pb-48 pr-20" : "pb-16"}`}>
         <div className="mb-4 flex items-center justify-between gap-2">
           {inGame && state.phase !== "debrief" ? <EvidenceTray evidence={state.evidence} /> : <span />}
           <div className="flex items-center gap-1">
@@ -112,6 +114,13 @@ export function BehindTheDotsGame() {
         <main key={`${state.phase}-${state.caseIndex}`} className="animate-rise">
           <Scene state={state} meta={meta} dispatch={dispatch} />
         </main>
+        {state.phase === "puzzle" && (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-card backdrop-blur">
+            <div className="mx-auto max-w-2xl">
+              <Btn onClick={() => dispatch({ type: "submit" })} className="w-full">ثبّت توقّعي</Btn>
+            </div>
+          </div>
+        )}
       </div>
 
       {state.paused && (
@@ -140,7 +149,7 @@ function IconBtn({ label, onClick, children }: { label: string; onClick: () => v
 function Scene({ state, meta, dispatch }: { state: GameState; meta: Meta; dispatch: (a: Action) => void }) {
   switch (state.phase) {
     case "cover":
-      return <Cover meta={meta} onStart={() => dispatch({ type: "start" })} hasProgress={false} />;
+      return <Cover meta={meta} onStart={() => dispatch({ type: "start", seed: createRunSeed(state.runSeed) })} />;
     case "briefing":
       return <Briefing state={state} meta={meta} dispatch={dispatch} />;
     case "tutorial":
@@ -157,20 +166,22 @@ function Scene({ state, meta, dispatch }: { state: GameState; meta: Meta; dispat
   }
 }
 
-function Cover({ meta, onStart }: { meta: Meta; onStart: () => void; hasProgress: boolean }) {
+function Cover({ meta, onStart }: { meta: Meta; onStart: () => void }) {
   return (
-    <section className="py-8 text-center">
-      <div dir="ltr" className="mx-auto mb-6 flex w-full max-w-sm items-end justify-between rounded-2xl border bg-card p-6 shadow-card">
-        <Glitch size={80} />
-        <Dotty size={72} />
+    <section className="story-cover py-5 text-center sm:py-8">
+      <div className="mx-auto mb-5 max-w-lg rounded-3xl border bg-card p-2 shadow-card sm:p-3">
+        <GuideIllustration scene="welcome" />
+      </div>
+      <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-bold text-primary shadow-card">
+        <span className="animate-pulse">✦</span> مهمة روّاد · لغز الشكاوى <span className="animate-pulse">✦</span>
       </div>
       <p className="mb-2 font-latin text-xs font-semibold uppercase tracking-[0.3em] text-primary">Behind the Dots</p>
       <h1 className="mb-3 text-5xl font-black">ورا النقط</h1>
-      <p className="mx-auto mb-8 max-w-md text-lg leading-relaxed text-muted-foreground">
-        ساعد دوتّي تقرأ النقط وتخمّن العلاقة قبل ما وحش الفوضى «جليتش» ياكلها! اتحرك بسرعة!
+      <p className="mx-auto mb-6 max-w-md text-lg leading-relaxed text-muted-foreground">
+        شكاوى شركة روّاد قلبت المكتب! قابل رامي، افهم سرّ النقط، وساعده يلقط أول خيط قبل ما جليتش يلخبط الملف.
       </p>
       <div className="flex flex-col items-center gap-3">
-        <Btn onClick={onStart} className="w-full max-w-xs">ابدأ التحقيق</Btn>
+        <Btn onClick={onStart} className="w-full max-w-xs">ادخل الحكاية <ChevronLeft className="h-5 w-5" /></Btn>
         <Link to="/" className="inline-flex h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4 rotate-180" /> ارجع للألعاب
         </Link>
@@ -186,28 +197,45 @@ function Cover({ meta, onStart }: { meta: Meta; onStart: () => void; hasProgress
 
 function Briefing({ state, meta, dispatch }: { state: GameState; meta: Meta; dispatch: (a: Action) => void }) {
   const done = state.briefingStep >= BRIEFING.length - 1;
+  const scene = BRIEFING[state.briefingStep]!;
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-3 rounded-2xl border bg-card p-4 shadow-card">
-        <FolderClosed className="h-10 w-10 text-primary" />
-        <div>
-          <div className="text-xs text-muted-foreground">ملف قضية · رواد للأجهزة المنزلية</div>
-          <div className="text-lg font-bold">شكاوى العملاء</div>
+      <div className="story-intro-grid" key={state.briefingStep}>
+        <div className="story-art-wrap">
+          <GuideIllustration scene={scene.scene} />
         </div>
+        <article className="story-narration">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <span className="rounded-full bg-primary-soft px-3 py-1.5 text-sm font-bold text-primary">{scene.kicker}</span>
+            <span dir="ltr" className="font-latin text-sm font-bold text-muted-foreground">{state.briefingStep + 1} / {BRIEFING.length}</span>
+          </div>
+          <h1 className="mb-3 text-3xl font-black leading-tight">{scene.title}</h1>
+          <p className="text-lg leading-[1.9]">{scene.text}</p>
+          {scene.scene === "scatter" && (
+            <div className="mt-4 flex flex-wrap gap-2 text-sm font-bold">
+              <span className="rounded-full bg-sky-100 px-3 py-2 text-sky-900">أفقي: رقم أول</span>
+              <span className="rounded-full bg-rose-100 px-3 py-2 text-rose-900">رأسي: رقم تاني</span>
+            </div>
+          )}
+          {scene.scene === "problem" && (
+            <div className="mission-clues">
+              <span>🚚 التأخير <b>×</b> الشكاوى</span>
+              <span>🧑‍💼 الموظفين <b>×</b> وقت الرد</span>
+              <span>🏷️ الخصم <b>×</b> الشكاوى</span>
+            </div>
+          )}
+        </article>
       </div>
-      <div className="space-y-3">
-        {BRIEFING.slice(0, state.briefingStep + 1).map((l, i) => (
-          <StoryCard key={i} who={l.who}>{l.text}</StoryCard>
-        ))}
+      <div className="story-progress" aria-label={`مشهد ${state.briefingStep + 1} من ${BRIEFING.length}`}>
+        {BRIEFING.map((_, i) => <span key={i} className={i <= state.briefingStep ? "is-active" : ""} />)}
       </div>
-      <div className="flex flex-wrap gap-2 pt-2">
-        {done ? (
-          <Btn onClick={() => dispatch({ type: "openCase" })} className="flex-1">افتح الملف</Btn>
-        ) : (
-          <Btn variant="ghost" onClick={() => dispatch({ type: "advanceBriefing" })} className="flex-1">التالي</Btn>
-        )}
-        {meta.tutorialDone && (
-          <Btn variant="ghost" onClick={() => dispatch({ type: "skipTutorial", tutorialEverDone: true })}>تخطّى التمرين</Btn>
+      <div className="flex flex-wrap gap-2 pt-1">
+        {state.briefingStep > 0 && <Btn variant="ghost" onClick={() => dispatch({ type: "backBriefing" })}><ChevronRight className="h-4 w-4" /> اللي فات</Btn>}
+        <Btn onClick={() => dispatch({ type: done ? "openCase" : "advanceBriefing" })} className="flex-1">
+          {done ? "يلا على تدريب المحققين" : "كمّل الحكاية"} <ChevronLeft className="h-5 w-5" />
+        </Btn>
+        {meta.tutorialDone && done && (
+          <Btn variant="ghost" onClick={() => dispatch({ type: "skipTutorial", tutorialEverDone: true })}>أنا فاهم اللعبة</Btn>
         )}
       </div>
     </section>
@@ -217,11 +245,11 @@ function Briefing({ state, meta, dispatch }: { state: GameState; meta: Meta; dis
 function MiniPattern({ kind }: { kind: "up" | "down" | "none" }) {
   const xs = [1, 2, 3, 4, 5, 6, 7, 8];
   const ys = kind === "up" ? [2, 3, 3, 5, 5, 6, 8, 8] : kind === "down" ? [8, 7, 7, 5, 5, 4, 2, 2] : [5, 2, 7, 4, 8, 3, 6, 4];
-  const label = kind === "up" ? "موجب ↗" : kind === "down" ? "سالب ↘" : "قريب من الصفر";
+  const label = kind === "up" ? "طالعة لفوق ↗" : kind === "down" ? "نازلة لتحت ↘" : "متبعثرة";
   return (
     <div className="rounded-xl border bg-card p-2 text-center">
       <ScatterPlot compact xs={xs} ys={ys} xLabel="" yLabel="" />
-      <div className="mt-1 text-xs font-semibold">{label}</div>
+      <div className="mt-1 text-sm font-semibold">{label}</div>
     </div>
   );
 }
@@ -232,8 +260,14 @@ function Tutorial({ state, meta, dispatch }: { state: GameState; meta: Meta; dis
   const actual = pearson(TUTORIAL.xs, TUTORIAL.ys)!;
   return (
     <section className="space-y-4">
-      <StoryCard>{TUTORIAL_LINES[0]}</StoryCard>
-      <p className="text-center text-xs text-muted-foreground">دوس على أي نقطة تشوف الرقمين بتوعها</p>
+      <div className="tutorial-coach">
+        <div className="tutorial-coach-art"><GuideIllustration scene="scatter" /></div>
+        <div className="tutorial-coach-copy">
+          <span>رامي بيشرح · مفيش تايمر</span>
+          <p>{TUTORIAL_LINES[0]}</p>
+        </div>
+      </div>
+      <p className="text-center text-base text-muted-foreground">دوس على نقطة عشان تشوف أرقامها</p>
       <div className="rounded-2xl border bg-card p-3 shadow-card">
         <ScatterPlot xs={TUTORIAL.xs} ys={TUTORIAL.ys} xLabel={TUTORIAL.xLabel} yLabel={TUTORIAL.yLabel} highlight={dot} onDotClick={setDot} showFit={revealed} />
         {dot !== null && (
@@ -292,7 +326,6 @@ function Puzzle({ state, dispatch }: { state: GameState; dispatch: (a: Action) =
       {state.phase === "puzzle" && (
         <ChaseTimer key={c.id} seconds={ROUND_SECONDS} paused={state.paused} onTimeout={() => dispatch({ type: "timeout" })} />
       )}
-      {state.phase === "puzzle" && <div className="h-24" />}
       <ScatterGuess
         c={c}
         guess={state.guess}
@@ -301,6 +334,7 @@ function Puzzle({ state, dispatch }: { state: GameState; dispatch: (a: Action) =
         hintsUsed={state.hintsUsed}
         onHint={() => dispatch({ type: "hint" })}
         onSubmit={() => dispatch({ type: "submit" })}
+        submitInDock={state.phase === "puzzle"}
       />
       {result && (
         <div className="space-y-3">

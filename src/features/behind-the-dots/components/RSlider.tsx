@@ -11,7 +11,7 @@ export function RSlider({ value, onChange, disabled }: Props) {
   return (
     <div className="w-full">
       <div className="mb-1 text-center">
-        <span className="text-xs text-muted-foreground">توقعك</span>
+        <span className="text-base text-muted-foreground">توقّعك</span>
         <div dir="ltr" className="font-latin text-4xl font-bold tabular-nums text-foreground">
           r = {formatR(value)}
         </div>
@@ -59,13 +59,13 @@ export function RSlider({ value, onChange, disabled }: Props) {
             type="button"
             disabled={disabled}
             onClick={() => onChange(p.v)}
-            className="h-10 rounded-lg border bg-muted text-xs font-semibold hover:bg-accent"
+            className="h-12 rounded-lg border bg-muted px-1 text-sm font-semibold leading-tight hover:bg-accent"
           >
             {p.t}
           </button>
         ))}
       </div>
-      <div dir="ltr" className="mt-1 grid grid-cols-3 px-12 text-[11px] text-muted-foreground">
+      <div dir="ltr" className="mt-1 grid grid-cols-3 gap-1 px-12 text-sm text-muted-foreground">
         <span className="text-left"><span className="font-latin">−1.00</span> · علاقة عكسية</span>
         <span className="text-center">قريب من الصفر</span>
         <span className="text-right">علاقة طردية · <span className="font-latin">+1.00</span></span>

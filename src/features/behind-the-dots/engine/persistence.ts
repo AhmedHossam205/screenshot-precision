@@ -25,7 +25,15 @@ export function loadState(storage: StorageLike, userId: string): GameState {
     const evidence = Array.from(new Set((p.evidence ?? []).filter((id) => ALL_CASE_IDS.includes(id))));
     // Tutorial state is transient: resume at a clean tutorial.
     const phase: Phase = p.phase === "tutorialReveal" ? "tutorial" : p.phase;
-    return { ...initialState, ...p, phase, evidence, paused: false, guess: typeof p.guess === "number" ? p.guess : 0 };
+    return {
+      ...initialState,
+      ...p,
+      phase,
+      evidence,
+      paused: false,
+      guess: typeof p.guess === "number" ? p.guess : 0,
+      runSeed: typeof p.runSeed === "number" && Number.isFinite(p.runSeed) ? p.runSeed >>> 0 : null,
+    };
   } catch {
     return { ...initialState };
   }

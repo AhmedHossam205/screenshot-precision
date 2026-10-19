@@ -49,7 +49,7 @@ export function ScatterPlot({ xs, ys, xLabel, yLabel, showFit, highlight, onDotC
         xT.ticks.map((t) => (
           <g key={`x${t}`}>
             <line x1={sx(t)} x2={sx(t)} y1={m.t} y2={H - m.b} className="stroke-chart-grid" />
-            <text x={sx(t)} y={H - m.b + 16} textAnchor="middle" className="fill-muted-foreground font-latin text-[11px]">
+            <text x={sx(t)} y={H - m.b + 16} textAnchor="middle" className="fill-muted-foreground font-latin text-[14px]">
               {t}
             </text>
           </g>
@@ -58,7 +58,7 @@ export function ScatterPlot({ xs, ys, xLabel, yLabel, showFit, highlight, onDotC
         yT.ticks.map((t) => (
           <g key={`y${t}`}>
             <line x1={m.l} x2={W - m.r} y1={sy(t)} y2={sy(t)} className="stroke-chart-grid" />
-            <text x={m.l - 8} y={sy(t) + 4} textAnchor="end" className="fill-muted-foreground font-latin text-[11px]">
+            <text x={m.l - 8} y={sy(t) + 4} textAnchor="end" className="fill-muted-foreground font-latin text-[14px]">
               {t}
             </text>
           </g>
@@ -67,13 +67,13 @@ export function ScatterPlot({ xs, ys, xLabel, yLabel, showFit, highlight, onDotC
       <line x1={m.l} x2={m.l} y1={m.t} y2={H - m.b} className="stroke-foreground/50" />
       {!compact && (
         <>
-          <text x={(W + m.l) / 2} y={H - 8} textAnchor="middle" className="fill-foreground text-[12px] font-semibold">
+          <text x={(W + m.l) / 2} y={H - 8} textAnchor="middle" className="fill-foreground text-[14px] font-semibold">
             {xLabel} →
           </text>
           <text
             transform={`translate(13 ${(H - m.b + m.t) / 2}) rotate(-90)`}
             textAnchor="middle"
-            className="fill-foreground text-[12px] font-semibold"
+            className="fill-foreground text-[14px] font-semibold"
           >
             {yLabel} →
           </text>

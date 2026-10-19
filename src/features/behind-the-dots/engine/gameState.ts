@@ -1,6 +1,7 @@
 import { CASES, TUTORIAL, type CaseId } from "../data/cases";
-import { CHOICES, type ChoiceId } from "../data/dialogue";
+import { BRIEFING, CHOICES, type ChoiceId } from "../data/dialogue";
 import { clampGuess, pearson, scoreGuess } from "./correlation";
+import { generateRunCases } from "./datasets";
 
 export type Phase =
   | "cover"
@@ -33,6 +34,7 @@ export interface GameState {
   choice: ChoiceId | null;
   paused: boolean;
   completed: boolean;
+  runSeed: number | null;
 }
 
 export const initialState: GameState = {
@@ -48,11 +50,13 @@ export const initialState: GameState = {
   choice: null,
   paused: false,
   completed: false,
+  runSeed: null,
 };
 
 export type Action =
-  | { type: "start" }
+  | { type: "start"; seed?: number }
   | { type: "advanceBriefing" }
+  | { type: "backBriefing" }
   | { type: "openCase" }
   | { type: "setGuess"; value: number }
   | { type: "submitTutorial" }
@@ -71,7 +75,7 @@ export type Action =
   | { type: "replay" }
   | { type: "__hydrate"; s: GameState };
 
-export const BRIEFING_LENGTH = 3;
+export const BRIEFING_LENGTH = BRIEFING.length;
 /** Seconds before the Glitch monster catches Dotty. */
 export const ROUND_SECONDS = 15;
 /** Points lost when time runs out (never below 0). */
@@ -82,16 +86,20 @@ export function totalScore(s: GameState): number {
 }
 
 export function currentCase(s: GameState) {
-  return CASES[Math.min(s.caseIndex, CASES.length - 1)]!;
+  const cases = s.runSeed === null ? CASES : generateRunCases(s.runSeed);
+  return cases[Math.min(s.caseIndex, cases.length - 1)]!;
 }
 
 export function reducer(s: GameState, a: Action): GameState {
   switch (a.type) {
     case "start":
-      return s.phase === "cover" ? { ...s, phase: "briefing", briefingStep: 0 } : s;
+      return s.phase === "cover" ? { ...s, phase: "briefing", briefingStep: 0, runSeed: a.seed ?? null } : s;
     case "advanceBriefing":
       if (s.phase !== "briefing") return s;
       return { ...s, briefingStep: Math.min(s.briefingStep + 1, BRIEFING_LENGTH - 1) };
+    case "backBriefing":
+      if (s.phase !== "briefing") return s;
+      return { ...s, briefingStep: Math.max(0, s.briefingStep - 1) };
     case "openCase":
       if (s.phase !== "briefing") return s;
       return { ...s, phase: "tutorial", guess: 0, tutorialGuess: null };
@@ -159,7 +167,7 @@ export function reducer(s: GameState, a: Action): GameState {
     case "__hydrate":
       return a.s;
     case "replay":
-      return { ...initialState };
+      return { ...initialState, runSeed: s.runSeed };
     default:
       return s;
   }

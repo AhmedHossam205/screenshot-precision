@@ -69,7 +69,7 @@ export function Glitch({ size = 56, chomp = false }: { size?: number; chomp?: bo
   );
 }
 
-/** The Glitch silently creeps toward Dotty over `seconds` (no countdown shown); reaching her calls onTimeout once. */
+/** The Glitch silently creeps toward Dotty over `seconds`; reaching her calls onTimeout once. */
 export function ChaseTimer({ seconds, paused, onTimeout }: { seconds: number; paused: boolean; onTimeout: () => void }) {
   const [elapsed, setElapsed] = useState(0);
   const fired = useRef(false);
@@ -100,24 +100,27 @@ export function ChaseTimer({ seconds, paused, onTimeout }: { seconds: number; pa
   const p = elapsed / seconds;
   const danger = p >= 0.75;
   const caught = elapsed >= seconds;
+  const remaining = Math.max(0, Math.ceil(seconds - elapsed));
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 shadow-card backdrop-blur" aria-hidden>
-      <div className={`mx-auto max-w-2xl px-4 pt-1 ${danger && !caught ? "animate-shiver" : ""}`}>
-        <div className={`text-center text-xs font-semibold ${danger ? "text-primary" : "text-muted-foreground"}`}>
-          {caught ? "جليتش مسك دوتّي!" : danger ? "جليتش قرّب جداً! ثبّت توقعك!" : "جليتش جاي ورا دوتّي…"}
+    <aside
+      className={`chase-rail ${danger ? "chase-rail-danger" : ""}`}
+      style={{ right: "max(0.5rem, calc((100vw - 44rem) / 2))", bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+      aria-label={`فاضل ${remaining} ثانية قبل ما جليتش يوصل لدوتّي`}
+      role="timer"
+    >
+      <div className="chase-clock"><strong>{remaining}</strong><span>ثانية</span></div>
+      <div className="chase-whisper">جليتش<br />نازل!</div>
+      <div className="chase-lane" dir="ltr">
+        <div className="chase-track" />
+        <div className="chase-fill" style={{ height: `calc((100% - 3.5rem) * ${p})` }} />
+        <div className="chase-monster" style={{ top: `calc(0.75rem + (100% - 3.25rem) * ${p})` }}>
+          <Glitch size={54} chomp={caught || danger} />
         </div>
-        <div dir="ltr" className="relative h-20">
-          <div className="absolute inset-x-0 bottom-3 h-1.5 rounded-full bg-muted" />
-          <div className="absolute bottom-3 left-0 h-1.5 rounded-full bg-primary/50" style={{ width: `${p * 100}%` }} />
-          <div className="absolute bottom-1" style={{ left: `${p * 80}%`, transform: `scale(${1 + p * 0.35})`, transformOrigin: "bottom left" }}>
-            <Glitch size={56} chomp={caught || danger} />
-          </div>
-          <div className="absolute bottom-2 right-0">
-            <Dotty size={44} mood={caught || danger ? "scared" : "happy"} />
-          </div>
+        <div className={`chase-dotty ${caught ? "is-caught" : ""}`}>
+          <Dotty size={44} mood={caught || danger ? "scared" : "happy"} />
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
