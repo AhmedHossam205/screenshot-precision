@@ -1,19 +1,21 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useReducer, useRef, useState } from "react";
-import { CASES, MAX_SCORE, TUTORIAL } from "./data/cases";
+import { CASES, TUTORIAL } from "./data/cases";
 import { BRIEFING, CHOICES, ENDING_LINE, MEETING_LINE, SKILLS, TUTORIAL_LINES } from "./data/dialogue";
 import { EvidenceCard, EvidenceTray } from "./components/EvidenceFile";
 import { ScatterGuess } from "./components/ScatterGuess";
 import { ScatterPlot } from "./components/ScatterPlot";
 import { StoryCard } from "./components/StoryCard";
-import { pearson } from "./engine/correlation";
+import { patternFor, pearson } from "./engine/correlation";
 import { ChaseTimer } from "./components/Mascot";
-import { currentCase, ROUND_SECONDS, initialState, reducer, totalScore, type Action, type GameState } from "./engine/gameState";
+import { currentCase, ROUND_SECONDS, initialState, reducer, type Action, type GameState } from "./engine/gameState";
 import { loadMeta, loadState, saveMeta, saveState, type Meta } from "./engine/persistence";
 import { playTone } from "./engine/sound";
-import { createRunSeed } from "./engine/datasets";
+import { createRunSeed, generateRunCases } from "./engine/datasets";
 import { GuideIllustration } from "./components/GuideIllustration";
+import { RoundOutcome } from "./components/RoundOutcome";
+import { OutcomeAnimation } from "./components/OutcomeAnimation";
 
 const USER_ID = "guest";
 
@@ -73,20 +75,25 @@ export function BehindTheDotsGame() {
     });
 
   const dispatch = (a: Action) => {
-    const tone = ({ submit: "reveal", submitTutorial: "reveal", attach: "save", submitChoice: "tap" } as const)[a.type as "submit"];
+    const previous = stateRef.current;
+    const guessIsRight = a.type === "submitTutorial"
+      ? previous.guess === patternFor(pearson(TUTORIAL.xs, TUTORIAL.ys)!)
+      : a.type === "submit"
+        ? previous.guess === patternFor(pearson(currentCase(previous).xs, currentCase(previous).ys)!)
+        : false;
+    const selectedChoice = CHOICES.find((c) => c.id === previous.choice);
+    const tone = a.type === "submit" && previous.phase === "puzzle" && previous.guess ? (guessIsRight ? "win" : "lose")
+      : a.type === "submitTutorial" && previous.phase === "tutorial" && previous.guess ? (guessIsRight ? "win" : "lose")
+      : a.type === "timeout" && previous.phase === "puzzle" && !previous.paused ? "lose"
+      : a.type === "submitChoice" && previous.phase === "meeting" && selectedChoice ? (selectedChoice.supported ? "win" : "lose")
+      : a.type === "attach" && previous.phase === "reveal" ? "save" : undefined;
     if (tone) playTone(tone, meta.muted);
     if (a.type === "finishTutorial" && !meta.tutorialDone) updateMeta({ tutorialDone: true });
     rawDispatch(a);
   };
 
   useEffect(() => {
-    if (state.phase === "debrief") {
-      const sc = totalScore(state);
-      if (sc > meta.bestScore) updateMeta({ bestScore: sc });
-      playTone("win", meta.muted);
-    }
     if (typeof window !== "undefined") window.scrollTo({ top: 0 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.caseIndex]);
 
   if (!loaded) return <div className="min-h-screen bg-background" />;
@@ -114,10 +121,13 @@ export function BehindTheDotsGame() {
         <main key={`${state.phase}-${state.caseIndex}`} className="animate-rise">
           <Scene state={state} meta={meta} dispatch={dispatch} />
         </main>
+        {state.phase === "puzzle" && <ChaseTimer key={state.caseIndex} seconds={ROUND_SECONDS} paused={state.paused} onTimeout={() => dispatch({ type: "timeout" })} />}
         {state.phase === "puzzle" && (
           <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-card backdrop-blur">
             <div className="mx-auto max-w-2xl">
-              <Btn onClick={() => dispatch({ type: "submit" })} className="w-full">ثبّت توقّعي</Btn>
+              <button onClick={() => dispatch({ type: "submit" })} disabled={state.guess === null} className="h-14 w-full rounded-xl bg-primary text-lg font-black text-primary-foreground shadow-card disabled:opacity-50">
+                {state.guess === null ? "اختار شكل النقط الأول ↑" : "ثبّت اختياري!"}
+              </button>
             </div>
           </div>
         )}
@@ -126,10 +136,10 @@ export function BehindTheDotsGame() {
       {state.paused && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm animate-pop rounded-2xl bg-card p-6 text-center shadow-card">
-            <h2 className="mb-2 text-xl font-bold">التحقيق متوقف مؤقتاً</h2>
-            <p className="mb-5 text-sm text-muted-foreground">تقدمك محفوظ. كمّل وقت ما تحب.</p>
+            <h2 className="mb-2 text-xl font-bold">وقفنا اللعبة شوية</h2>
+            <p className="mb-5 text-base text-muted-foreground">خد نفسك. كل حاجة محفوظة.</p>
             <Btn onClick={() => dispatch({ type: "resume" })} className="w-full">
-              <Play className="h-4 w-4" /> كمّل التحقيق
+              <Play className="h-4 w-4" /> يلا نكمّل
             </Btn>
           </div>
         </div>
@@ -149,7 +159,7 @@ function IconBtn({ label, onClick, children }: { label: string; onClick: () => v
 function Scene({ state, meta, dispatch }: { state: GameState; meta: Meta; dispatch: (a: Action) => void }) {
   switch (state.phase) {
     case "cover":
-      return <Cover meta={meta} onStart={() => dispatch({ type: "start", seed: createRunSeed(state.runSeed) })} />;
+      return <Cover onStart={() => dispatch({ type: "start", seed: createRunSeed(state.runSeed) })} />;
     case "briefing":
       return <Briefing state={state} meta={meta} dispatch={dispatch} />;
     case "tutorial":
@@ -162,34 +172,33 @@ function Scene({ state, meta, dispatch }: { state: GameState; meta: Meta; dispat
     case "challenge":
       return <Meeting state={state} dispatch={dispatch} />;
     case "debrief":
-      return <Debrief state={state} meta={meta} dispatch={dispatch} />;
+      return <Debrief state={state} dispatch={dispatch} />;
   }
 }
 
-function Cover({ meta, onStart }: { meta: Meta; onStart: () => void }) {
+function Cover({ onStart }: { onStart: () => void }) {
   return (
     <section className="story-cover py-5 text-center sm:py-8">
       <div className="mx-auto mb-5 max-w-lg rounded-3xl border bg-card p-2 shadow-card sm:p-3">
         <GuideIllustration scene="welcome" />
       </div>
       <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-bold text-primary shadow-card">
-        <span className="animate-pulse">✦</span> مهمة روّاد · لغز الشكاوى <span className="animate-pulse">✦</span>
+        <span className="animate-pulse">✦</span> مغامرة عربية الآيس كريم <span className="animate-pulse">✦</span>
       </div>
       <p className="mb-2 font-latin text-xs font-semibold uppercase tracking-[0.3em] text-primary">Behind the Dots</p>
       <h1 className="mb-3 text-5xl font-black">ورا النقط</h1>
       <p className="mx-auto mb-6 max-w-md text-lg leading-relaxed text-muted-foreground">
-        شكاوى شركة روّاد قلبت المكتب! قابل رامي، افهم سرّ النقط، وساعده يلقط أول خيط قبل ما جليتش يلخبط الملف.
+        ليلى عندها عربية آيس كريم ودفتر مليان أيام ونقط. افهم معاها النقط بتقول إيه، وساعدها تجهّز لبكرة قبل ما جليتش يلحق دوتّي!
       </p>
+      <div className="mx-auto mb-6 max-w-md rounded-2xl border bg-card p-4 text-right shadow-card">
+        <strong className="text-xl">هدفنا: نكسب وننقذ دوتّي! 🏁</strong>
+        <p className="mt-1 text-base leading-relaxed">اقرأ ٣ صفحات من دفتر ليلى، وبعدها ساعدها تختار خطة بكرة. كل ما تفهم النقط، دوتّي تقرب من النجاة!</p>
+      </div>
       <div className="flex flex-col items-center gap-3">
-        <Btn onClick={onStart} className="w-full max-w-xs">ادخل الحكاية <ChevronLeft className="h-5 w-5" /></Btn>
+        <Btn onClick={onStart} className="w-full max-w-xs">يلا نعرف الحكاية <ChevronLeft className="h-5 w-5" /></Btn>
         <Link to="/" className="inline-flex h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4 rotate-180" /> ارجع للألعاب
         </Link>
-        {meta.bestScore > 0 && (
-          <p className="text-xs text-muted-foreground">
-            أفضل نتيجة: <span className="font-latin">{meta.bestScore}/{MAX_SCORE}</span>
-          </p>
-        )}
       </div>
     </section>
   );
@@ -211,34 +220,45 @@ function Briefing({ state, meta, dispatch }: { state: GameState; meta: Meta; dis
           </div>
           <h1 className="mb-3 text-3xl font-black leading-tight">{scene.title}</h1>
           <p className="text-lg leading-[1.9]">{scene.text}</p>
-          {scene.scene === "scatter" && (
+          {(scene.scene === "axes" || scene.scene === "point") && (
             <div className="mt-4 flex flex-wrap gap-2 text-sm font-bold">
-              <span className="rounded-full bg-sky-100 px-3 py-2 text-sky-900">أفقي: رقم أول</span>
-              <span className="rounded-full bg-rose-100 px-3 py-2 text-rose-900">رأسي: رقم تاني</span>
-            </div>
-          )}
-          {scene.scene === "problem" && (
-            <div className="mission-clues">
-              <span>🚚 التأخير <b>×</b> الشكاوى</span>
-              <span>🧑‍💼 الموظفين <b>×</b> وقت الرد</span>
-              <span>🏷️ الخصم <b>×</b> الشكاوى</span>
+              <span className="rounded-full bg-sky-100 px-3 py-2 text-sky-900">← تحت: حرارة اليوم</span>
+              <span className="rounded-full bg-rose-100 px-3 py-2 text-rose-900">↑ على الجنب: كوبايات اتباعت</span>
             </div>
           )}
         </article>
       </div>
+      {(scene.scene === "axes" || scene.scene === "point") && <TeachingPlot showPoint={scene.scene === "point"} />}
       <div className="story-progress" aria-label={`مشهد ${state.briefingStep + 1} من ${BRIEFING.length}`}>
         {BRIEFING.map((_, i) => <span key={i} className={i <= state.briefingStep ? "is-active" : ""} />)}
       </div>
       <div className="flex flex-wrap gap-2 pt-1">
         {state.briefingStep > 0 && <Btn variant="ghost" onClick={() => dispatch({ type: "backBriefing" })}><ChevronRight className="h-4 w-4" /> اللي فات</Btn>}
         <Btn onClick={() => dispatch({ type: done ? "openCase" : "advanceBriefing" })} className="flex-1">
-          {done ? "يلا على تدريب المحققين" : "كمّل الحكاية"} <ChevronLeft className="h-5 w-5" />
+          {done ? "جرّب بنفسك من غير وقت" : "كمّل الحكاية"} <ChevronLeft className="h-5 w-5" />
         </Btn>
         {meta.tutorialDone && done && (
           <Btn variant="ghost" onClick={() => dispatch({ type: "skipTutorial", tutorialEverDone: true })}>أنا فاهم اللعبة</Btn>
         )}
       </div>
     </section>
+  );
+}
+
+function TeachingPlot({ showPoint }: { showPoint: boolean }) {
+  return (
+    <div className="teaching-plot rounded-2xl border bg-card p-4 shadow-card" dir="rtl">
+      <h2 className="mb-2 text-xl font-black">{showPoint ? "تعالى نحط يوم الثلاثاء على الرسم" : "اقرأ الخطين الأول"}</h2>
+      <svg viewBox="0 0 400 275" className="mx-auto block w-full max-w-xl" role="img" aria-label={showPoint ? "نقطة يوم الثلاثاء عند حرارة ٢٤ درجة و١٨ كوباية" : "المحور الأفقي للحرارة والمحور الرأسي للكوبايات"}>
+        <path d="M52 24 V218 H370" fill="none" stroke="#526675" strokeWidth="3" />
+        {[0, 10, 20, 30, 40].map((n) => <g key={n}><path d={`M${52 + n * 7.5} 218 v6`} stroke="#526675" strokeWidth="2" /><text x={52 + n * 7.5} y="241" textAnchor="middle">{n}</text></g>)}
+        {[0, 10, 20, 30].map((n) => <g key={n}><path d={`M46 ${218 - n * 6} h6`} stroke="#526675" strokeWidth="2" /><text x="38" y={223 - n * 6} textAnchor="end">{n}</text></g>)}
+        <text x="210" y="268" textAnchor="middle">🌡️ درجة الحرارة ←</text>
+        <text x="18" y="100" transform="rotate(-90 18 100)" textAnchor="middle">🍦 كوبايات اتباعت</text>
+        {showPoint && <g className="teaching-point"><path d="M232 218 V110 H52" fill="none" stroke="#e78272" strokeWidth="2.5" strokeDasharray="6 5" /><circle cx="232" cy="110" r="11" fill="#e78272" stroke="#fff" strokeWidth="3" /><text x="245" y="101">الثلاثاء</text></g>}
+      </svg>
+      <p className="text-center text-lg font-bold">{showPoint ? "نروح لـ٢٤ درجة تحت، ونطلع لـ١٨ كوباية. التقاطع ده هو نقطة الثلاثاء!" : "كل يوم له رقم تحت ورقم على الجنب. مكان تقابلهم هيبقى نقطته."}</p>
+    </div>
   );
 }
 
@@ -257,22 +277,25 @@ function MiniPattern({ kind }: { kind: "up" | "down" | "none" }) {
 function Tutorial({ state, meta, dispatch }: { state: GameState; meta: Meta; dispatch: (a: Action) => void }) {
   const [dot, setDot] = useState<number | null>(5);
   const revealed = state.phase === "tutorialReveal";
-  const actual = pearson(TUTORIAL.xs, TUTORIAL.ys)!;
+  const actual = patternFor(pearson(TUTORIAL.xs, TUTORIAL.ys)!);
+  if (revealed && state.tutorialGuess !== null) {
+    return <RoundOutcome c={TUTORIAL} result={{ guess: state.tutorialGuess, actual, points: 0 }} nextLabel="افتح دفتر ليلى" onNext={() => dispatch({ type: "finishTutorial" })} onRetry={() => dispatch({ type: "retryTutorial" })} />;
+  }
   return (
     <section className="space-y-4">
       <div className="tutorial-coach">
-        <div className="tutorial-coach-art"><GuideIllustration scene="scatter" /></div>
+        <div className="tutorial-coach-art"><GuideIllustration scene="axes" /></div>
         <div className="tutorial-coach-copy">
-          <span>رامي بيشرح · مفيش تايمر</span>
+          <span>ليلى معاك · مفيش تايمر</span>
           <p>{TUTORIAL_LINES[0]}</p>
         </div>
       </div>
-      <p className="text-center text-base text-muted-foreground">دوس على نقطة عشان تشوف أرقامها</p>
+      <p className="text-center text-lg font-bold">دوس على نقطة عشان تشوف اليوم ده</p>
       <div className="rounded-2xl border bg-card p-3 shadow-card">
-        <ScatterPlot xs={TUTORIAL.xs} ys={TUTORIAL.ys} xLabel={TUTORIAL.xLabel} yLabel={TUTORIAL.yLabel} highlight={dot} onDotClick={setDot} showFit={revealed} />
+        <ScatterPlot xs={TUTORIAL.xs} ys={TUTORIAL.ys} xLabel={TUTORIAL.xLabel} yLabel={TUTORIAL.yLabel} highlight={dot} onDotClick={setDot} />
         {dot !== null && (
           <p className="mt-1 text-center text-sm">
-            الفرع ده: {TUTORIAL.xLabel} = <b className="font-latin">{TUTORIAL.xs[dot]}</b> · {TUTORIAL.yLabel} = <b className="font-latin">{TUTORIAL.ys[dot]}</b>
+            اليوم ده: {TUTORIAL.xLabel} = <b className="font-latin">{TUTORIAL.xs[dot]}</b> · {TUTORIAL.yLabel} = <b className="font-latin">{TUTORIAL.ys[dot]}</b>
           </p>
         )}
       </div>
@@ -282,25 +305,14 @@ function Tutorial({ state, meta, dispatch }: { state: GameState; meta: Meta; dis
         <MiniPattern kind="down" />
         <MiniPattern kind="none" />
       </div>
-      <StoryCard delay={300}>{TUTORIAL_LINES[2]}</StoryCard>
-      <h2 className="pt-2 text-center text-lg font-bold">جرّب تحرّك المؤشر</h2>
-      <ScatterGuessTutorial
+      <h2 className="pt-2 text-center text-xl font-bold">دلوقتي اختار شكل النقط</h2>
+      <ScatterGuess
+        c={TUTORIAL}
         guess={state.guess}
         onGuess={(v) => dispatch({ type: "setGuess", value: v })}
-        result={revealed && state.tutorialGuess !== null ? { guess: state.tutorialGuess, actual, points: 0 } : undefined}
         onSubmit={() => dispatch({ type: "submitTutorial" })}
+        showPlot={false}
       />
-      {revealed && (
-        <div className="space-y-3">
-          <StoryCard>{TUTORIAL.halaAfter}</StoryCard>
-          <div className="flex gap-2">
-            <Btn onClick={() => dispatch({ type: "finishTutorial" })} className="flex-1">كمّل التحقيق</Btn>
-            <Btn variant="ghost" onClick={() => dispatch({ type: "retryTutorial" })}>
-              <RotateCcw className="h-4 w-4" /> جرّب تاني
-            </Btn>
-          </div>
-        </div>
-      )}
       {!revealed && meta.tutorialDone && (
         <button onClick={() => dispatch({ type: "skipTutorial", tutorialEverDone: true })} className="mx-auto block h-11 text-sm text-muted-foreground underline">
           تخطّى التمرين
@@ -310,66 +322,59 @@ function Tutorial({ state, meta, dispatch }: { state: GameState; meta: Meta; dis
   );
 }
 
-function ScatterGuessTutorial(props: { guess: number; onGuess: (v: number) => void; result?: { guess: number; actual: number; points: number } | undefined; onSubmit: () => void }) {
-  return <ScatterGuess c={TUTORIAL} {...props} />;
-}
-
 function Puzzle({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
   const c = currentCase(state);
   const result = state.phase === "reveal" ? state.results[c.id] : undefined;
+  if (result) return <RoundOutcome c={c} result={result} nextLabel={state.caseIndex === CASES.length - 1 ? "ساعد ليلى تختار خطة بكرة" : "اقلب الصفحة"} onNext={() => dispatch({ type: "attach" })} />;
   return (
     <section className="space-y-4">
       <div className="text-xs font-semibold text-primary">
-        الدليل <span className="font-latin">{state.caseIndex + 1}</span> من <span className="font-latin">{CASES.length}</span> · {c.title}
+        صفحة <span className="font-latin">{state.caseIndex + 1}</span> من <span className="font-latin">{CASES.length}</span> · {c.title}
       </div>
       <StoryCard>{c.question}</StoryCard>
-      {state.phase === "puzzle" && (
-        <ChaseTimer key={c.id} seconds={ROUND_SECONDS} paused={state.paused} onTimeout={() => dispatch({ type: "timeout" })} />
-      )}
       <ScatterGuess
         c={c}
         guess={state.guess}
         onGuess={(v) => dispatch({ type: "setGuess", value: v })}
-        result={result}
         hintsUsed={state.hintsUsed}
         onHint={() => dispatch({ type: "hint" })}
         onSubmit={() => dispatch({ type: "submit" })}
         submitInDock={state.phase === "puzzle"}
       />
-      {result && (
-        <div className="space-y-3">
-          <StoryCard delay={200}>{c.halaAfter}</StoryCard>
-          <Btn onClick={() => dispatch({ type: "attach" })} className="w-full">
-            احفظ الدليل
-          </Btn>
-        </div>
-      )}
     </section>
   );
 }
 
 function Meeting({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
   const challenge = state.phase === "challenge" ? CHOICES.find((c) => c.id === state.choice) : null;
+  if (challenge) return (
+    <section className="space-y-4" aria-live="polite">
+      <div className="rounded-2xl border bg-amber-50 p-4 shadow-card">
+        <h1 className="text-3xl font-black">جليتش خطف الخطة! 😅</h1>
+        <OutcomeAnimation kind="lose" />
+        <div className="flex items-start gap-3 rounded-xl bg-card p-3">
+          <p className="text-xl font-black leading-relaxed">ليلى: {challenge.quip}</p>
+        </div>
+      </div>
+      <div className="rounded-2xl border bg-card p-4 shadow-card">
+        <p className="text-sm font-bold text-muted-foreground">اختيارك</p>
+        <p className="mt-1 text-lg font-bold">{challenge.text}</p>
+        <p className="mt-3 rounded-xl bg-emerald-50 p-3 text-lg leading-relaxed">💡 {challenge.challenge}</p>
+      </div>
+      <Btn onClick={() => dispatch({ type: "revise" })} className="w-full">يلا نرجع وننقذ الخطة</Btn>
+    </section>
+  );
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-bold">اجتماع العمليات</h1>
+      <h1 className="text-2xl font-bold">ليلى بتجهّز لبكرة</h1>
       <StoryCard>{MEETING_LINE}</StoryCard>
       <div className="grid gap-3 sm:grid-cols-3">
         {state.evidence.map((id) => (
-          <EvidenceCard key={id} id={id} result={state.results[id]} />
+          <EvidenceCard key={id} id={id} result={state.results[id]} storyCase={state.runSeed === null ? undefined : generateRunCases(state.runSeed).find((c) => c.id === id)} />
         ))}
       </div>
-      {challenge ? (
-        <div className="space-y-3">
-          <div className="rounded-xl border bg-muted p-3 text-sm">
-            <span className="font-semibold">توصيتك: </span>{challenge.text}
-          </div>
-          <StoryCard>{challenge.challenge}</StoryCard>
-          <Btn onClick={() => dispatch({ type: "revise" })} className="w-full">راجع توصيتك</Btn>
-        </div>
-      ) : (
         <div className="space-y-2">
-          <h2 className="pt-2 font-bold">قدّم توصيتك</h2>
+          <h2 className="pt-2 text-xl font-bold">هتقول لليلى تعمل إيه؟</h2>
           {CHOICES.map((ch) => (
             <button
               key={ch.id}
@@ -386,44 +391,38 @@ function Meeting({ state, dispatch }: { state: GameState; dispatch: (a: Action) 
             </button>
           ))}
           <Btn onClick={() => state.choice && dispatch({ type: "submitChoice" })} className={`w-full ${state.choice ? "" : "pointer-events-none opacity-40"}`}>
-            قدّم التوصية
+            ثبّت الاختيار
           </Btn>
         </div>
-      )}
     </section>
   );
 }
 
-function Debrief({ state, meta, dispatch }: { state: GameState; meta: Meta; dispatch: (a: Action) => void }) {
-  const score = totalScore(state);
+function Debrief({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
   return (
     <section className="space-y-5">
-      <StoryCard>{ENDING_LINE}</StoryCard>
-      <div className="animate-pop rounded-2xl border bg-card p-6 text-center shadow-card">
-        <div className="text-sm text-muted-foreground">دقة تقديراتك</div>
-        <div dir="ltr" className="font-latin text-6xl font-black text-primary">
-          {score}<span className="text-2xl text-muted-foreground">/{MAX_SCORE}</span>
-        </div>
-        {meta.bestScore > 0 && <div className="mt-1 text-xs text-muted-foreground">أفضل نتيجة: <span className="font-latin">{meta.bestScore}/{MAX_SCORE}</span></div>}
-        <p className="mt-3 text-sm">التوصية: تحقيق مبدئي في التأخير ووقت الاستجابة، مع جمع أدلة إضافية.</p>
+      <div className="animate-pop rounded-2xl border bg-emerald-50 p-4 text-center shadow-card">
+        <h1 className="text-3xl font-black">{ENDING_LINE}</h1>
+        <OutcomeAnimation kind="win" />
+        <p className="mt-3 text-lg font-bold">دوتّي بترقص، وليلى بتحتفل! دلوقتي العربية جاهزة للتجربة بكرة.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {state.evidence.map((id) => (
-          <EvidenceCard key={id} id={id} result={state.results[id]} />
+          <EvidenceCard key={id} id={id} result={state.results[id]} storyCase={state.runSeed === null ? undefined : generateRunCases(state.runSeed).find((c) => c.id === id)} />
         ))}
       </div>
       <div className="rounded-2xl border bg-card p-4">
-        <h2 className="mb-2 font-bold">المهارات اللي اتمرنت عليها</h2>
+        <h2 className="mb-2 text-xl font-bold">إيه اللي اتعلمناه؟</h2>
         <ul className="list-disc space-y-1 pr-5 text-sm">
           {SKILLS.map((s) => <li key={s}>{s}</li>)}
         </ul>
         <p className="mt-3 text-sm text-muted-foreground">
-          اللي لسه مش معروف: هل التأخير أو قلة الموظفين هما السبب فعلاً؟ ده محتاج تجربة أو بيانات إضافية تستبعد العوامل التانية.
+          الرسم ورّانا أيام حصل فيها حاجتين مع بعض. عشان نعرف السبب بجد، ليلى لازم تجرّب وتراقب أيام تانية.
         </p>
       </div>
       <div className="rounded-2xl bg-foreground p-5 text-center text-background">
-        <p className="font-latin text-lg font-bold">Read the pattern. Question the conclusion.</p>
-        <p className="mt-1 text-sm opacity-80">الارتباط إشارة تستاهل نتابعها… مش حكم بالسببية.</p>
+        <p className="text-xl font-black">كل نقطة يوم. والأيام بتحكي قصة!</p>
+        <p className="mt-1 text-base opacity-80">بس لازم نجرب قبل ما نقول عرفنا السبب.</p>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Btn onClick={() => dispatch({ type: "replay" })} className="flex-1">
@@ -433,12 +432,6 @@ function Debrief({ state, meta, dispatch }: { state: GameState; meta: Meta; disp
           ارجع للألعاب
         </Link>
       </div>
-      <p className="text-center text-xs text-muted-foreground">
-        عايز تتعمق أكتر؟{" "}
-        <a href="https://imp.education" target="_blank" rel="noreferrer" className="underline hover:text-primary">
-          دبلومة تحليل البيانات وذكاء الأعمال من IMP
-        </a>
-      </p>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CASES, TUTORIAL } from "./data/cases";
-import { formatR, pearson, scoreGuess } from "./engine/correlation";
+import { formatR, patternFor, pearson, scoreGuess } from "./engine/correlation";
 import { initialState, reducer, totalScore, type Action, type GameState } from "./engine/gameState";
 import { loadState, saveState, sessionKey } from "./engine/persistence";
 
@@ -11,12 +11,9 @@ const memStore = () => {
 };
 
 describe("pearson", () => {
-  it("matches the bible's coefficients", () => {
-    expect(pearson(TUTORIAL.xs, TUTORIAL.ys)!).toBeCloseTo(0.96, 2);
-    const [c1, c2, c3] = CASES.map((c) => pearson(c.xs, c.ys)!) as [number, number, number];
-    expect(Math.abs(c1 - 0.82)).toBeLessThan(0.005);
-    expect(Math.abs(c2 + 0.88)).toBeLessThan(0.005);
-    expect(Math.abs(c3 - 0.05)).toBeLessThan(0.005);
+  it("identifies the intended ice cream patterns", () => {
+    expect(patternFor(pearson(TUTORIAL.xs, TUTORIAL.ys)!)).toBe("up");
+    expect(CASES.map((c) => patternFor(pearson(c.xs, c.ys)!))).toEqual(["up", "down", "none"]);
   });
   it("is order-invariant", () => {
     const c = CASES[0]!;
@@ -41,29 +38,29 @@ describe("scoring thresholds", () => {
 
 describe("game flow", () => {
   const toPuzzle = () =>
-    run(initialState, { type: "start" }, { type: "advanceBriefing" }, { type: "advanceBriefing" }, { type: "openCase" }, { type: "submitTutorial" }, { type: "finishTutorial" });
+    run(initialState, { type: "start" }, { type: "openCase" }, { type: "setGuess", value: "up" }, { type: "submitTutorial" }, { type: "finishTutorial" });
 
   it("tutorial cannot be skipped on first play", () => {
     const s = run(initialState, { type: "start" }, { type: "openCase" }, { type: "skipTutorial", tutorialEverDone: false });
     expect(s.phase).toBe("tutorial");
   });
   it("awards points once per case and saves evidence once", () => {
-    let s = run(toPuzzle(), { type: "setGuess", value: 0.8 }, { type: "submit" });
+    let s = run(toPuzzle(), { type: "setGuess", value: "up" }, { type: "submit" });
     expect(s.results.C1?.points).toBe(3);
     s = run(s, { type: "submit" }, { type: "attach" }, { type: "attach" });
     expect(s.evidence).toEqual(["C1"]);
     expect(totalScore(s)).toBe(3);
   });
-  it("guess moves in 0.01 steps", () => {
-    expect(run(toPuzzle(), { type: "setGuess", value: 0.37 }).guess).toBe(0.37);
-    expect(run(toPuzzle(), { type: "setGuess", value: -0.63 }).guess).toBe(-0.63);
+  it("stores one of the three visual choices", () => {
+    expect(run(toPuzzle(), { type: "setGuess", value: "up" }).guess).toBe("up");
+    expect(run(toPuzzle(), { type: "setGuess", value: "down" }).guess).toBe("down");
   });
   it("timeout reveals and costs 1 point, never below 0", () => {
-    const s = run(toPuzzle(), { type: "setGuess", value: 0.8 }, { type: "timeout" });
+    const s = run(toPuzzle(), { type: "setGuess", value: "up" }, { type: "timeout" });
     expect(s.phase).toBe("reveal");
     expect(s.results.C1?.points).toBe(2);
     expect(s.results.C1?.timedOut).toBe(true);
-    const z = run(toPuzzle(), { type: "setGuess", value: -1 }, { type: "timeout" });
+    const z = run(toPuzzle(), { type: "setGuess", value: "down" }, { type: "timeout" });
     expect(z.results.C1?.points).toBe(0);
   });
   it("hints do not change the guess or reveal r", () => {
@@ -73,7 +70,7 @@ describe("game flow", () => {
   });
   it("overclaims lead to challenge, then revision, and A finishes", () => {
     let s = toPuzzle();
-    for (let i = 0; i < 3; i++) s = run(s, { type: "submit" }, { type: "attach" });
+    for (const value of ["up", "down", "none"] as const) s = run(s, { type: "setGuess", value }, { type: "submit" }, { type: "attach" });
     expect(s.phase).toBe("meeting");
     s = run(s, { type: "choose", choice: "B" }, { type: "submitChoice" });
     expect(s.phase).toBe("challenge");
@@ -86,7 +83,7 @@ describe("game flow", () => {
 describe("persistence", () => {
   it("restores reveal after refresh without re-awarding", () => {
     const store = memStore();
-    const s = run(initialState, { type: "start" }, { type: "openCase" }, { type: "submitTutorial" }, { type: "finishTutorial" }, { type: "setGuess", value: 0.8 }, { type: "submit" });
+    const s = run(initialState, { type: "start" }, { type: "openCase" }, { type: "setGuess", value: "up" }, { type: "submitTutorial" }, { type: "finishTutorial" }, { type: "setGuess", value: "up" }, { type: "submit" });
     saveState(store, "u1", s);
     const back = loadState(store, "u1");
     expect(back.phase).toBe("reveal");

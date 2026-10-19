@@ -231,7 +231,42 @@
 .guess-party span:nth-child(12) { left: 92%; background: #ff9c91; animation-delay: .18s; }
 @keyframes btd-firework { 0% { transform: scale(.08); opacity: 0; } 18% { opacity: 1; } 75% { opacity: .9; } 100% { transform: scale(1.25); opacity: 0; } }
 
-/* Storybook intro and Rami's animated full-body illustration */
+/* Result theater: Dotty crosses the stage; Glitch catches her only on a loss. */
+.outcome-stage { position: relative; height: 210px; margin: .75rem 0; overflow: hidden; isolation: isolate; border-radius: 1.1rem; background: linear-gradient(180deg, #ddf5ff, #fff7dc 78%); }
+.outcome-stage-lose { background: linear-gradient(180deg, #e8dcfa, #fff2dc 78%); }
+.outcome-ground { position: absolute; right: 0; bottom: 0; left: 0; height: 33px; background: #a9d9ae; border-top: 4px solid #6dbb94; }
+.outcome-stage-lose .outcome-ground { background: #d2b5cf; border-color: #b18bb7; }
+.outcome-leila { position: absolute; z-index: 2; right: 5%; bottom: 15px; height: 185px; width: 140px; object-fit: contain; object-position: bottom; filter: drop-shadow(0 4px 3px #33415533); }
+.outcome-dotty, .outcome-glitch { position: absolute; z-index: 3; bottom: 22px; width: 86px; height: 86px; object-fit: contain; filter: drop-shadow(0 5px 3px #33415533); }
+.outcome-stage-win .outcome-leila { animation: btd-leila-cheer 2.2s ease-in-out both, btd-leila-bob 1.25s 2.2s ease-in-out infinite; }
+.outcome-stage-win .outcome-dotty { animation: btd-dotty-victory 2.4s cubic-bezier(.2,.75,.2,1) both, btd-dotty-dance .8s 2.4s ease-in-out infinite; }
+.outcome-stage-lose .outcome-leila { animation: btd-leila-oops 1.8s ease-in-out both; }
+.outcome-stage-lose .outcome-dotty { animation: btd-dotty-caught 2.4s ease-in both; }
+.outcome-glitch { width: 116px; height: 116px; bottom: 15px; animation: btd-glitch-chase 2.4s cubic-bezier(.4,0,.8,1) both, btd-glitch-munch .6s 2.4s ease-in-out infinite; }
+.outcome-burp { position: absolute; z-index: 5; top: 26px; left: 51%; border: 2px solid #9e7599; border-radius: 999px; background: white; padding: .35rem .7rem; color: #52385c; font-size: 1.25rem; font-weight: 900; opacity: 0; animation: btd-burp .8s 1.85s ease-out both; }
+.outcome-fireworks { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.outcome-fireworks span { position: absolute; left: 25%; top: 35%; width: 7px; height: 7px; border-radius: 50%; background: #ffca50; box-shadow: 0 -38px #fa7185, 28px -28px #57b9d6, 38px 0 #ffc34f, 28px 28px #8bcf91, 0 38px #a77bd3, -28px 28px #fc91a3, -38px 0 #f8c657, -28px -28px #77c9b1; opacity: 0; animation: btd-result-firework 1s .45s ease-out both; }
+.outcome-fireworks span:nth-child(2) { left: 50%; top: 20%; animation-delay: .8s; }
+.outcome-fireworks span:nth-child(3) { left: 75%; top: 44%; animation-delay: 1.15s; }
+@keyframes btd-dotty-victory { 0% { left: -20%; transform: translateY(0) rotate(-15deg) scale(.8); } 25% { left: 20%; transform: translateY(-38px) rotate(18deg) scale(1); } 50% { left: 45%; transform: translateY(0) rotate(-20deg) scale(1.1); } 72% { left: 62%; transform: translateY(-45px) rotate(24deg) scale(1.15); } 100% { left: 66%; transform: translateY(0) rotate(0) scale(1); } }
+@keyframes btd-leila-cheer { 0%,30% { transform: translateY(0) rotate(0); } 45% { transform: translateY(-22px) rotate(-5deg); } 60% { transform: translateY(0) rotate(4deg); } 76% { transform: translateY(-18px) rotate(-5deg); } 100% { transform: translateY(0) rotate(0); } }
+@keyframes btd-dotty-dance { 0%,100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-18px) rotate(12deg); } }
+@keyframes btd-leila-bob { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-7px) rotate(3deg); } }
+@keyframes btd-dotty-caught { 0% { left: -15%; transform: translateY(0) scale(1); opacity: 1; } 32% { left: 33%; transform: translateY(-28px) scale(1); opacity: 1; } 60% { left: 54%; transform: translateY(0) scale(1); opacity: 1; } 74% { left: 58%; transform: translateY(-15px) scale(.15) rotate(180deg); opacity: 0; } 100% { left: 58%; transform: translateY(-15px) scale(0); opacity: 0; } }
+@keyframes btd-glitch-chase { 0% { left: -30%; transform: rotate(-8deg) scale(.85); } 32% { left: 8%; transform: rotate(6deg) scale(1); } 62% { left: 42%; transform: rotate(-8deg) scale(1.15); } 76% { left: 51%; transform: rotate(9deg) scale(1.35, .8); } 88% { left: 51%; transform: rotate(-5deg) scale(1.1, 1.2); } 100% { left: 51%; transform: rotate(0) scale(1.1); } }
+@keyframes btd-glitch-munch { 0%,100% { transform: scale(1.1); } 50% { transform: scale(1.18,.9) rotate(4deg); } }
+@keyframes btd-leila-oops { 0%,55% { transform: rotate(0); } 70% { transform: rotate(6deg); } 85% { transform: rotate(-5deg); } 100% { transform: rotate(0); } }
+@keyframes btd-burp { 0% { opacity: 0; transform: translateY(10px) scale(.5); } 40%,80% { opacity: 1; transform: translateY(0) scale(1.1); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes btd-result-firework { 0% { opacity: 0; transform: scale(.05) rotate(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: scale(1.4) rotate(30deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .outcome-stage-win .outcome-leila, .outcome-stage-win .outcome-dotty, .outcome-stage-lose .outcome-leila, .outcome-stage-lose .outcome-dotty, .outcome-glitch, .outcome-burp, .outcome-fireworks span { animation: none; }
+  .outcome-dotty { left: 45%; }
+  .outcome-stage-lose .outcome-dotty { opacity: 0; }
+  .outcome-glitch { left: 45%; }
+  .outcome-burp { opacity: 1; }
+}
+
+/* Illustrated story scenes for Leila and the ice cream cart. */
 .story-intro-grid { display: grid; gap: 1rem; align-items: center; animation: btd-story-enter .55s cubic-bezier(.2,.75,.2,1) both; }
 .story-art-wrap { min-width: 0; }
 .story-narration { border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); border-radius: 1.25rem; background: var(--card); padding: 1.25rem; box-shadow: 0 12px 32px #27384d12; animation: btd-story-copy .6s .08s ease-out both; }
@@ -277,9 +312,41 @@
 .guide-dotty-arrive { margin-top: 25px; animation: btd-guide-fly-in .6s .18s cubic-bezier(.16,.8,.25,1) both, btd-hop 1s .8s ease-in-out infinite; }
 .guide-glitch-arrive { animation: btd-guide-drop-in .7s .3s cubic-bezier(.16,.8,.25,1) both; }
 .guide-stage-caption { position: absolute; z-index: 4; right: 50%; bottom: 7px; transform: translateX(50%); border-radius: 999px; background: #fffdf8ed; padding: .32rem .75rem; color: #556477; font-size: .75rem; font-weight: 800; white-space: nowrap; box-shadow: 0 3px 12px #28344912; }
+.guide-cart-awning { position: absolute; z-index: 0; right: -3%; bottom: 0; width: 74%; height: 31%; border-radius: 55% 55% 0 0; background: repeating-linear-gradient(90deg, #f4a6a0 0 34px, #fff6df 34px 68px); opacity: .5; transform: rotate(-7deg); }
+.guide-cart-awning span { position: absolute; top: 20%; right: 18%; font-size: 2rem; }
+.guide-painted-figure { position: absolute; z-index: 2; right: -16%; bottom: 0; width: 100%; height: 100%; object-fit: contain; object-position: bottom center; filter: drop-shadow(0 12px 10px #514b3b32); animation: btd-guide-arrive .8s cubic-bezier(.17,.75,.25,1) both, btd-guide-float 4s .85s ease-in-out infinite; }
+.story-cover .guide-painted-figure { right: 4%; bottom: 0; width: 70%; height: 100%; }
+.guide-day-card, .guide-demo-plot, .guide-pattern-cards { position: absolute; z-index: 4; top: 13%; left: 4%; width: 43%; border: 2px solid #e4d7bd; border-radius: 18px; background: #fffdf2f2; box-shadow: 0 9px 25px #413b2a24; animation: btd-guide-fly-in .6s .25s cubic-bezier(.16,.8,.25,1) both; }
+.guide-day-card { display: grid; gap: .45rem; padding: 1rem; font-size: 1.1rem; }
+.guide-day-card strong { color: #9d5c52; font-size: 1.25rem; }
+.guide-demo-plot { padding: .55rem; text-align: center; }
+.guide-demo-plot strong, .guide-demo-plot small { display: block; font-size: .9rem; color: #4b5262; }
+.guide-demo-plot svg { display: block; width: 100%; margin: .2rem auto; overflow: visible; }
+.guide-demo-plot svg text { fill: #596171; font-size: 10px; font-weight: 700; }
+.guide-demo-axis { fill: none; stroke: #516675; stroke-width: 2.5; stroke-linecap: round; }
+.guide-demo-guides { fill: none; stroke: #db7f74; stroke-width: 2; stroke-dasharray: 5 4; stroke-dashoffset: 80; animation: btd-guide-draw .8s .5s ease-out forwards; }
+.guide-demo-dot { fill: #eb917b; stroke: #fff; stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: btd-guide-pop .5s .9s both; }
+.guide-pattern-cards { display: grid; gap: .4rem; padding: .7rem; }
+.guide-pattern-cards span { border-radius: .75rem; background: #f5daca; padding: .45rem; text-align: center; color: #703f49; font-size: 1rem; font-weight: 800; animation: btd-clue-arrive .45s both; }
+.guide-pattern-cards span:nth-child(2) { background: #ddedec; animation-delay: .12s; }
+.guide-pattern-cards span:nth-child(3) { background: #f6eacb; animation-delay: .24s; }
+.guide-avatar { object-position: 58% 22%; }
+.guess-guide-image { position: relative; z-index: 1; width: 88px; height: 95px; flex: none; object-fit: cover; object-position: 56% 15%; animation: btd-rami-celebrate .9s both; }
+.guess-reaction-oops .guess-guide-image { animation: btd-rami-oops .75s both; }
+.pattern-choice { display: flex; min-height: 88px; flex-direction: column; align-items: center; justify-content: center; gap: .15rem; border: 2px solid #d9dedc; border-radius: 1rem; background: #fffdf8; color: #3e5360; transition: transform .18s, background .18s, border-color .18s, box-shadow .18s; }
+.pattern-choice:hover { transform: translateY(-3px); border-color: #6ab5b7; }
+.pattern-choice.is-selected { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 3px #4bb1bd2a; transform: scale(1.04); }
+.pattern-choice span { font-family: ui-rounded, system-ui, sans-serif; font-size: 2rem; line-height: 1; }
+.pattern-choice strong { font-size: 1rem; }
+.teaching-plot svg text { fill: #3e5360; font-size: 16px; font-weight: 700; }
+.teaching-point path { stroke-dashoffset: 160; animation: btd-guide-draw 1s ease-out forwards; }
+.teaching-point circle { transform-box: fill-box; transform-origin: center; animation: btd-guide-pop .55s .8s both; }
+.teaching-point text { opacity: 0; animation: btd-story-copy .6s 1s forwards; }
 .tutorial-coach { display: grid; grid-template-columns: minmax(120px, .72fr) minmax(0, 1.28fr); align-items: center; gap: .75rem; overflow: hidden; border: 1px solid #45b7c844; border-radius: 1.25rem; background: linear-gradient(110deg, #f2fbfa, #fff8ee); padding: .65rem; box-shadow: 0 8px 24px #2834490c; }
 .tutorial-coach-art { min-width: 0; }
 .tutorial-coach .guide-stage { height: 150px; border: 0; background: transparent; box-shadow: none; }
+.tutorial-coach .guide-painted-figure { width: 100%; height: 100%; right: -9%; }
+.tutorial-coach .guide-cart-awning, .tutorial-coach .guide-demo-plot { display: none; }
 .tutorial-coach .guide-stage::before, .tutorial-coach .guide-stage-glow, .tutorial-coach .guide-stage-caption { display: none; }
 .tutorial-coach .guide-full-figure { width: 160px; bottom: 0; }
 .tutorial-coach .guide-mini-plot { top: 2px; left: 1px; width: 100px; padding: .25rem; }
@@ -293,7 +360,7 @@
 .mission-clues b { color: #e9897c; }
 
 /* Vertical chase lane: Glitch descends toward Dotty as the clock runs out. */
-.chase-rail { position: fixed; z-index: 40; top: 6.25rem; display: flex; width: 68px; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid #e1dbe0; border-radius: 999px; background: color-mix(in srgb, var(--card) 94%, transparent); padding: .45rem .35rem .3rem; box-shadow: 0 8px 24px #24364a20; backdrop-filter: blur(10px); }
+.chase-rail { position: fixed; z-index: 40; top: 6.25rem; display: flex; width: 76px; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid #e1dbe0; border-radius: 999px; background: color-mix(in srgb, var(--card) 94%, transparent); padding: .45rem .35rem .3rem; box-shadow: 0 8px 24px #24364a20; backdrop-filter: blur(10px); }
 .chase-clock { z-index: 2; display: flex; width: 100%; flex-direction: column; align-items: center; border-radius: 999px; background: #fff4d8; padding: .35rem .1rem .25rem; color: #34445a; line-height: 1; }
 .chase-clock strong { font-family: ui-rounded, system-ui, sans-serif; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
 .chase-clock span { margin-top: .15rem; font-size: .58rem; font-weight: 800; }
@@ -302,7 +369,7 @@
 .chase-track, .chase-fill { position: absolute; top: .65rem; left: 50%; width: 5px; border-radius: 999px; transform: translateX(-50%); }
 .chase-track { bottom: 1.15rem; background: repeating-linear-gradient(to bottom, #d7dfe5 0 8px, transparent 8px 15px); }
 .chase-fill { top: .75rem; max-height: calc(100% - 3.1rem); background: linear-gradient(to bottom, #efb150, #e97976); box-shadow: 0 0 12px #e9797650; transition: height .15s linear; }
-.chase-monster { position: absolute; z-index: 2; left: 50%; width: 54px; transform: translate(-50%, -50%); transition: top .15s linear; filter: drop-shadow(0 3px 4px #26364825); }
+.chase-monster { position: absolute; z-index: 2; left: 50%; width: 64px; transform: translate(-50%, -50%); transition: top .15s linear; filter: drop-shadow(0 3px 4px #26364825); }
 .chase-dotty { position: absolute; z-index: 3; right: 50%; bottom: -.25rem; transform: translateX(50%); transition: transform .2s ease; }
 .chase-dotty.is-caught { transform: translateX(50%) scale(1.14); }
 .chase-rail-danger { border-color: #edaaa0; animation: btd-rail-alarm .7s ease-in-out infinite alternate; }
@@ -330,7 +397,15 @@
 @media (max-width: 420px) {
   .story-cover .guide-stage { height: 248px; }
   .story-narration { padding: 1rem; }
-  .chase-rail { width: 62px; }
+  .chase-rail { width: 68px; }
   .tutorial-coach { grid-template-columns: 112px minmax(0, 1fr); gap: .4rem; padding: .45rem; }
   .tutorial-coach .guide-stage { height: 140px; }
+  .guide-painted-figure { width: 100%; right: -16%; }
+  .guide-day-card, .guide-demo-plot, .guide-pattern-cards { width: 50%; top: 17%; }
+  .guide-day-card { padding: .55rem; font-size: .8rem; }
+  .guide-day-card strong { font-size: 1rem; }
+  .guide-pattern-cards span { font-size: .8rem; }
+  .guide-stage-caption { max-width: 95%; overflow: hidden; text-overflow: ellipsis; font-size: .65rem; }
+  .pattern-choice { min-height: 78px; }
+  .pattern-choice strong { font-size: .85rem; }
 }

@@ -1,10 +1,10 @@
 let ctx: AudioContext | null = null;
 
-export function playTone(kind: "tap" | "reveal" | "save" | "win", muted: boolean) {
+export function playTone(kind: "tap" | "reveal" | "save" | "win" | "lose", muted: boolean) {
   if (muted || typeof window === "undefined") return;
   try {
     ctx ??= new AudioContext();
-    const notes = { tap: [520], reveal: [440, 660], save: [600, 800], win: [523, 659, 784] }[kind];
+    const notes = { tap: [520], reveal: [440, 660], save: [600, 800], win: [523, 659, 784, 1047], lose: [430, 330, 390] }[kind];
     notes.forEach((f, i) => {
       const o = ctx!.createOscillator();
       const g = ctx!.createGain();

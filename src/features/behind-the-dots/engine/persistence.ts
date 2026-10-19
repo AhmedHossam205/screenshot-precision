@@ -1,7 +1,8 @@
 import { ALL_CASE_IDS } from "../data/cases";
 import { initialState, type GameState, type Phase } from "./gameState";
 
-const PREFIX = "the-analyst:behind-dots:v1";
+// Keep the previous story's save untouched; its guesses use a different format.
+const PREFIX = "the-analyst:behind-dots:v3";
 const PHASES: Phase[] = ["cover", "briefing", "tutorial", "tutorialReveal", "puzzle", "reveal", "meeting", "challenge", "debrief"];
 
 export const sessionKey = (userId: string) => `${PREFIX}:${userId}`;
@@ -21,7 +22,7 @@ export function loadState(storage: StorageLike, userId: string): GameState {
     const raw = storage.getItem(sessionKey(userId));
     if (!raw) return { ...initialState };
     const p = JSON.parse(raw) as Partial<GameState>;
-    if (p.v !== 1 || !p.phase || !PHASES.includes(p.phase)) return { ...initialState };
+    if (p.v !== 3 || !p.phase || !PHASES.includes(p.phase)) return { ...initialState };
     const evidence = Array.from(new Set((p.evidence ?? []).filter((id) => ALL_CASE_IDS.includes(id))));
     // Tutorial state is transient: resume at a clean tutorial.
     const phase: Phase = p.phase === "tutorialReveal" ? "tutorial" : p.phase;
@@ -31,7 +32,7 @@ export function loadState(storage: StorageLike, userId: string): GameState {
       phase,
       evidence,
       paused: false,
-      guess: typeof p.guess === "number" ? p.guess : 0,
+      guess: p.guess === "up" || p.guess === "down" || p.guess === "none" ? p.guess : null,
       runSeed: typeof p.runSeed === "number" && Number.isFinite(p.runSeed) ? p.runSeed >>> 0 : null,
     };
   } catch {

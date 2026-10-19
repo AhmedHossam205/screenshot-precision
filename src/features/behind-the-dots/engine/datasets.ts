@@ -4,16 +4,15 @@ import { pearson } from "./correlation";
 const POINTS = 12;
 const caseCache = new Map<number, readonly StoryCase[]>();
 const Y_RANGES: Record<string, readonly [number, number]> = {
-  C1: [4, 19],
-  C2: [5, 30],
-  C3: [4, 18],
+  C1: [8, 48],
+  C2: [2, 20],
+  C3: [8, 48],
 };
 const X_POOLS: Record<string, readonly number[]> = {
-  // Give each replay a visibly different set of branch measurements while
-  // keeping the labels' real-world ranges plausible.
-  C1: Array.from({ length: 23 }, (_, i) => 1 + i * 0.5),
-  C2: Array.from({ length: 15 }, (_, i) => i + 2),
-  C3: Array.from({ length: 21 }, (_, i) => i),
+  // Each point is one day. Replays change the days while keeping the pattern clear.
+  C1: Array.from({ length: 25 }, (_, i) => i + 15),
+  C2: Array.from({ length: 24 }, (_, i) => i),
+  C3: Array.from({ length: 24 }, (_, i) => i),
 };
 
 function randomFor(seed: number) {

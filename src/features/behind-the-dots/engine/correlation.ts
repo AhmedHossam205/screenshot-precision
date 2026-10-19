@@ -1,3 +1,17 @@
+import type { Pattern } from "../data/cases";
+
+export const PATTERN_LABELS: Record<Pattern, string> = {
+  up: "النقط طالعة ↗",
+  down: "النقط نازلة ↘",
+  none: "مفيش اتجاه واضح ✨",
+};
+
+export function patternFor(r: number): Pattern {
+  if (r >= 0.45) return "up";
+  if (r <= -0.45) return "down";
+  return "none";
+}
+
 /** Sample Pearson correlation. Returns null when undefined (n<2, length mismatch, zero variance). */
 export function pearson(xs: readonly number[], ys: readonly number[]): number | null {
   const n = xs.length;
